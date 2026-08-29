@@ -33,3 +33,82 @@ export type PaginatedResponse<T> = {
   pagination: Pagination;
 };
 
+export type AuthUser = {
+  id: string;
+  role: Role;
+  status: UserStatus;
+  phone?: string | null;
+  email?: string | null;
+  createdAt?: string;
+};
+
+export type AuthSessionResponse = {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
+};
+
+export type Specialty = {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  status?: SpecialtyStatus;
+  doctors?: DoctorSummary[];
+};
+
+export type DoctorSummary = {
+  userID: string;
+  fullName: string;
+  yearsOfExperience?: number | null;
+  qualifications?: string[];
+  avatarUrl?: string | null;
+  bio?: string | null;
+  specialties?: Specialty[];
+  ratingAverage?: number | null;
+  reviewCount?: number;
+};
+
+export type DoctorDetail = DoctorSummary & {
+  email?: string | null;
+  reviews?: DoctorReview[];
+  ratingSummary?: DoctorRatingSummary;
+};
+
+export type DoctorRatingSummary = {
+  ratingAverage?: number | null;
+  reviewCount?: number;
+  counts?: Record<number, number>;
+};
+
+export type DoctorAvailabilitySlot = {
+  startAt: string;
+  endAt: string;
+};
+
+export type DoctorAvailabilityDay = {
+  date: string;
+  slots: DoctorAvailabilitySlot[];
+};
+
+export type DoctorAvailability = {
+  doctorId: string;
+  timezone: string;
+  fromDate: string;
+  toDate: string;
+  slotDurationMinutes: number;
+  days: DoctorAvailabilityDay[];
+};
+
+export type DoctorReview = {
+  id: string;
+  rating: number;
+  comment?: string | null;
+  status?: DoctorReviewStatus;
+  createdAt?: string;
+  patientDisplayName?: string;
+  doctorReply?: {
+    content: string;
+    createdAt?: string;
+  } | null;
+};

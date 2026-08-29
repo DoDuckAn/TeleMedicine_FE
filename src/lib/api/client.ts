@@ -33,6 +33,7 @@ type QueryValue = string | number | boolean | null | undefined;
 export type ApiRequestOptions = Omit<RequestInit, "headers"> & {
   accessToken?: string;
   headers?: HeadersInit;
+  json?: unknown;
   params?: Record<string, QueryValue>;
 };
 
@@ -54,11 +55,15 @@ function buildUrl(path: string, params?: Record<string, QueryValue>) {
 
 export async function apiFetch<T>(
   path: string,
-  { accessToken, headers, params, body, ...init }: ApiRequestOptions = {},
+  { accessToken, headers, json, params, body, ...init }: ApiRequestOptions = {},
 ) {
   const requestHeaders = new Headers(headers);
+  const requestBody = json === undefined ? body : JSON.stringify(json);
 
-  if (!(body instanceof FormData) && !requestHeaders.has("Content-Type")) {
+  if (
+    !(requestBody instanceof FormData) &&
+    !requestHeaders.has("Content-Type")
+  ) {
     requestHeaders.set("Content-Type", "application/json");
   }
 
@@ -68,7 +73,7 @@ export async function apiFetch<T>(
 
   const response = await fetch(buildUrl(path, params), {
     ...init,
-    body,
+    body: requestBody,
     headers: requestHeaders,
   });
 
@@ -87,4 +92,3 @@ export async function apiFetch<T>(
 
   return payload.data;
 }
-

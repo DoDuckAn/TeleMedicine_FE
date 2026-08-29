@@ -3,8 +3,8 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kham Benh Tu Xa",
-  description: "Telemedicine web app for remote appointments and video consultations.",
+  title: "Khám Bệnh Từ Xa",
+  description: "Nền tảng đặt lịch khám và tư vấn sức khỏe trực tuyến.",
 };
 
 export default function RootLayout({
@@ -20,4 +20,3 @@ export default function RootLayout({
     </html>
   );
 }
-
