@@ -112,3 +112,107 @@ export type DoctorReview = {
     createdAt?: string;
   } | null;
 };
+
+export type PatientProfile = {
+  fullName: string;
+  dateOfBirth: string;
+  gender: Gender;
+  address?: string | null;
+  medicalHistory?: string | null;
+  drugAllergies?: string | null;
+  avatar?: string | null;
+};
+
+export type PatientMe = {
+  id: string;
+  phone: string;
+  email?: string | null;
+  patientProfile: PatientProfile;
+};
+
+export type PatientSummary = {
+  userID?: string;
+  fullName?: string;
+  phone?: string | null;
+  email?: string | null;
+  patientProfile?: PatientProfile;
+};
+
+export type AppointmentStatusHistory = {
+  id?: string;
+  fromStatus?: AppointmentStatus | null;
+  toStatus: AppointmentStatus;
+  reason?: string | null;
+  actorRole?: Role | "SYSTEM" | null;
+  createdAt: string;
+};
+
+export type Appointment = {
+  id: string;
+  doctorID: string;
+  patientID: string;
+  startAt: string;
+  endAt: string;
+  visitReason: string;
+  status: AppointmentStatus;
+  confirmationDueAt?: string | null;
+  rejectionReason?: string | null;
+  cancellationReason?: string | null;
+  cancelledBy?: Role | "SYSTEM" | null;
+  respondedAt?: string | null;
+  cancelledAt?: string | null;
+  completedAt?: string | null;
+  noShowAt?: string | null;
+  meetingUrl?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  doctor?: DoctorSummary;
+  patient?: PatientSummary;
+  statusHistory?: AppointmentStatusHistory[];
+  review?: DoctorReview | null;
+};
+
+export type ReviewEligibility = {
+  hasCompletedAppointment: boolean;
+  canReview: boolean;
+  reason: "ALREADY_REVIEWED" | "NO_COMPLETED_APPOINTMENT" | null;
+  review?: DoctorReview | null;
+};
+
+export type NotificationAppointment = {
+  id: string;
+  startAt: string;
+  status: AppointmentStatus;
+  doctor?: Pick<DoctorSummary, "fullName" | "userID">;
+  patient?: Pick<PatientSummary, "fullName" | "userID">;
+};
+
+export type NotificationItem = {
+  id: string;
+  type: string;
+  scheduledAt?: string | null;
+  readAt?: string | null;
+  createdAt: string;
+  title: string;
+  body: string;
+  appointment?: NotificationAppointment | null;
+};
+
+export type NotificationPreferences = {
+  channels: {
+    email: boolean;
+    push: boolean;
+  };
+  events: {
+    appointmentCancelled: boolean;
+    appointmentCompleted: boolean;
+    bookingCreated: boolean;
+    doctorNoShow?: boolean;
+    reminder1Hour: boolean;
+    reminder15Minutes: boolean;
+    requestConfirmed: boolean;
+    requestCreated: boolean;
+    requestExpired: boolean;
+    requestRejected: boolean;
+  };
+};
