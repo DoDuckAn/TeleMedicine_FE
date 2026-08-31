@@ -21,6 +21,22 @@ export type DoctorReviewStatus = "PUBLISHED" | "HIDDEN";
 
 export type PushDevicePlatform = "WEB" | "ANDROID" | "IOS";
 
+export type Weekday =
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY"
+  | "SUNDAY";
+
+export type WeeklyScheduleRange = {
+  endTime: string;
+  startTime: string;
+};
+
+export type WeeklySchedule = Record<Weekday, WeeklyScheduleRange[]>;
+
 export type Pagination = {
   page: number;
   limit: number;
@@ -69,6 +85,10 @@ export type DoctorSummary = {
   reviewCount?: number;
 };
 
+export type DoctorProfile = DoctorSummary & {
+  weeklySchedule?: WeeklySchedule;
+};
+
 export type DoctorDetail = DoctorSummary & {
   email?: string | null;
   reviews?: DoctorReview[];
@@ -78,7 +98,7 @@ export type DoctorDetail = DoctorSummary & {
 export type DoctorMe = {
   id: string;
   email: string;
-  doctorProfile: DoctorSummary;
+  doctorProfile: DoctorProfile;
 };
 
 export type DoctorRatingSummary = {
@@ -106,17 +126,72 @@ export type DoctorAvailability = {
   days: DoctorAvailabilityDay[];
 };
 
+export type DoctorWeeklySchedule = {
+  doctorId: string;
+  slotDurationMinutes: number;
+  timezone: string;
+  updatedAt?: string;
+  weeklySchedule: WeeklySchedule;
+};
+
+export type DoctorScheduleOverride = {
+  createdAt?: string;
+  endAt: string;
+  id: string;
+  reason?: string | null;
+  startAt: string;
+  type: DoctorScheduleOverrideType;
+  updatedAt?: string;
+};
+
+export type DoctorScheduleOverrideRange = {
+  endAt: string;
+  startAt: string;
+};
+
+export type DoctorScheduleOverrideList = {
+  from: string;
+  items: DoctorScheduleOverride[];
+  to: string;
+};
+
+export type CreateScheduleOverrideResult = {
+  cancelledAppointmentCount: number;
+  cancelledAppointmentIds: string[];
+  createdOverrideCount: number;
+  overrides: DoctorScheduleOverride[];
+};
+
+export type RestoreScheduleOverridesResult = {
+  removedOverrideCount: number;
+  removedOverrideIds: string[];
+  replacementOverrideCount: number;
+  replacementOverrides: DoctorScheduleOverride[];
+  restoredRanges: DoctorScheduleOverrideRange[];
+};
+
 export type DoctorReview = {
   id: string;
+  doctorID?: string;
   rating: number;
   comment?: string | null;
   status?: DoctorReviewStatus;
   createdAt?: string;
-  patientDisplayName?: string;
-  doctorReply?: {
-    content: string;
-    createdAt?: string;
+  hiddenReason?: string | null;
+  patient?: {
+    fullName?: string;
+    userID?: string;
   } | null;
+  patientDisplayName?: string;
+  doctorReply?:
+    | {
+        content: string;
+        createdAt?: string;
+      }
+    | string
+    | null;
+  repliedAt?: string | null;
+  updatedAt?: string;
 };
 
 export type PatientProfile = {
@@ -176,6 +251,50 @@ export type Appointment = {
   patient?: PatientSummary;
   statusHistory?: AppointmentStatusHistory[];
   review?: DoctorReview | null;
+};
+
+export type DoctorScheduleCalendarAppointment = Pick<
+  Appointment,
+  | "confirmationDueAt"
+  | "endAt"
+  | "id"
+  | "meetingUrl"
+  | "startAt"
+  | "status"
+  | "visitReason"
+> & {
+  patient?: {
+    avatar?: string | null;
+    dateOfBirth?: string | null;
+    fullName?: string;
+    gender?: Gender;
+    userID?: string;
+  } | null;
+};
+
+export type DoctorScheduleCalendarSlot = {
+  appointment?: DoctorScheduleCalendarAppointment | null;
+  endAt: string;
+  isBookable: boolean;
+  override?: Pick<DoctorScheduleOverride, "id" | "reason"> | null;
+  startAt: string;
+  status: AppointmentStatus | "AVAILABLE" | "UNAVAILABLE";
+};
+
+export type DoctorScheduleCalendarDay = {
+  date: string;
+  overrides: DoctorScheduleOverride[];
+  slots: DoctorScheduleCalendarSlot[];
+  weekday: Weekday;
+};
+
+export type DoctorScheduleCalendar = {
+  days: DoctorScheduleCalendarDay[];
+  doctorId: string;
+  slotDurationMinutes: number;
+  timezone: string;
+  weekEnd: string;
+  weekStart: string;
 };
 
 export type ReviewEligibility = {

@@ -24,13 +24,10 @@ const activeNavItems = [
   { href: "/doctor/dashboard", icon: Home, label: "Tổng quan" },
   { href: "/doctor/requests", icon: ClipboardList, label: "Yêu cầu khám" },
   { href: "/doctor/appointments", icon: CalendarClock, label: "Lịch tư vấn" },
-];
-
-const laterNavItems = [
-  { icon: Settings, label: "Lịch làm việc" },
-  { icon: MessageSquareText, label: "Đánh giá" },
-  { icon: BarChart3, label: "Thống kê" },
-  { icon: UserRound, label: "Hồ sơ" },
+  { href: "/doctor/schedule", icon: Settings, label: "Lịch làm việc" },
+  { href: "/doctor/reviews", icon: MessageSquareText, label: "Đánh giá" },
+  { href: "/doctor/statistics", icon: BarChart3, label: "Thống kê" },
+  { href: "/doctor/profile", icon: UserRound, label: "Hồ sơ" },
 ];
 
 export function DoctorShell({
@@ -73,50 +70,7 @@ export function DoctorShell({
           <BrandMark />
         </Link>
 
-        <nav className="mt-8 space-y-1">
-          {activeNavItems.map((item) => {
-            const Icon = item.icon;
-            const active =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
-
-            return (
-              <Link
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition",
-                  active
-                    ? "bg-blue-50 text-primary"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-primary",
-                )}
-                href={item.href}
-                key={item.href}
-              >
-                <Icon aria-hidden="true" className="size-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="mt-8 border-t border-blue-100 pt-5">
-          <p className="px-3 text-xs font-bold uppercase text-muted-foreground">
-            Làm ở nửa sau Phase 3
-          </p>
-          <div className="mt-2 space-y-1">
-            {laterNavItems.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-400"
-                  key={item.label}
-                >
-                  <Icon aria-hidden="true" className="size-4" />
-                  {item.label}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <DoctorNav pathname={pathname} />
       </aside>
 
       <div className="lg:pl-72">
@@ -148,8 +102,49 @@ export function DoctorShell({
           </div>
         </header>
 
+        <div className="border-b border-blue-100 bg-white lg:hidden">
+          <div className="overflow-x-auto px-4 py-3">
+            <DoctorNav mobile pathname={pathname} />
+          </div>
+        </div>
+
         <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
+  );
+}
+
+function DoctorNav({
+  mobile = false,
+  pathname,
+}: {
+  mobile?: boolean;
+  pathname: string;
+}) {
+  return (
+    <nav className={mobile ? "flex min-w-max gap-2" : "mt-8 space-y-1"}>
+      {activeNavItems.map((item) => {
+        const Icon = item.icon;
+        const active =
+          pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+        return (
+          <Link
+            className={cn(
+              "flex items-center gap-3 rounded-lg text-sm font-semibold transition",
+              mobile ? "px-3 py-2" : "px-3 py-2.5",
+              active
+                ? "bg-blue-50 text-primary"
+                : "text-slate-600 hover:bg-slate-100 hover:text-primary",
+            )}
+            href={item.href}
+            key={item.href}
+          >
+            <Icon aria-hidden="true" className="size-4" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

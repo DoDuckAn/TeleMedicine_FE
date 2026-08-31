@@ -21,6 +21,7 @@ import {
   getDoctorReviews,
   getDoctorSchedule,
 } from "@/lib/api/public";
+import { getDoctorReviewReply } from "@/lib/doctor-reviews";
 import { formatDate, formatRating, formatTimeRange } from "@/lib/format";
 
 import { DoctorAvatar } from "./doctor-avatar";
@@ -277,9 +278,9 @@ export function DoctorDetailPage({ doctorId }: DoctorDetailPageProps) {
                         <p className="mt-3 text-sm leading-6 text-muted-foreground">
                           {review.comment ?? "Bệnh nhân không để lại nhận xét."}
                         </p>
-                        {review.doctorReply?.content ? (
+                        {getDoctorReviewReply(review) ? (
                           <p className="mt-3 rounded-md bg-white p-3 text-sm leading-6 text-slate-700">
-                            Phản hồi: {review.doctorReply.content}
+                            Phản hồi: {getDoctorReviewReply(review)}
                           </p>
                         ) : null}
                       </article>
