@@ -75,6 +75,12 @@ export type DoctorDetail = DoctorSummary & {
   ratingSummary?: DoctorRatingSummary;
 };
 
+export type DoctorMe = {
+  id: string;
+  email: string;
+  doctorProfile: DoctorSummary;
+};
+
 export type DoctorRatingSummary = {
   ratingAverage?: number | null;
   reviewCount?: number;
@@ -215,4 +221,40 @@ export type NotificationPreferences = {
     requestExpired: boolean;
     requestRejected: boolean;
   };
+};
+
+export type StatisticsSummary = {
+  completedAppointments: number;
+  completionRate: number;
+  resolvedAppointments: number;
+  totalAppointments: number;
+  uniquePatients: number;
+};
+
+export type AppointmentsByPeriod = {
+  completed: number;
+  period: string;
+  total: number;
+};
+
+export type DoctorStatistics = {
+  appointmentsByPeriod: AppointmentsByPeriod[];
+  range: {
+    from: string;
+    groupBy: "day" | "week" | "month";
+    timezone: string;
+    to: string;
+  };
+  scope:
+    | {
+        type: "SYSTEM";
+      }
+    | {
+        doctor: Pick<DoctorSummary, "avatarUrl" | "fullName" | "userID"> & {
+          status?: UserStatus;
+        };
+        type: "DOCTOR";
+      };
+  statusBreakdown: Record<AppointmentStatus, number>;
+  summary: StatisticsSummary;
 };

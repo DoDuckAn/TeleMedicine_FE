@@ -50,3 +50,17 @@ export function canPatientCancelAppointment(
 
   return startsAt - now >= 30 * 60 * 1000;
 }
+
+export function canDoctorCancelAppointment(
+  status: AppointmentStatus,
+  startAt: string,
+) {
+  return canPatientCancelAppointment(status, startAt);
+}
+
+export function canDoctorCompleteAppointment(
+  status: AppointmentStatus,
+  startAt: string,
+) {
+  return status === "CONFIRMED" && Date.now() >= new Date(startAt).getTime();
+}
