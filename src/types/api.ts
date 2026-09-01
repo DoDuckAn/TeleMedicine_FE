@@ -58,6 +58,19 @@ export type AuthUser = {
   createdAt?: string;
 };
 
+export type UserStatusHistory = {
+  changedBy?: {
+    email?: string | null;
+    id?: string;
+    phone?: string | null;
+  } | null;
+  createdAt: string;
+  fromStatus?: UserStatus | null;
+  id: string;
+  reason?: string | null;
+  toStatus: UserStatus;
+};
+
 export type AuthSessionResponse = {
   accessToken: string;
   refreshToken: string;
@@ -70,7 +83,10 @@ export type Specialty = {
   name: string;
   description?: string | null;
   status?: SpecialtyStatus;
+  createdAt?: string;
+  deletedAt?: string | null;
   doctors?: DoctorSummary[];
+  updatedAt?: string;
 };
 
 export type DoctorSummary = {
@@ -83,6 +99,8 @@ export type DoctorSummary = {
   specialties?: Specialty[];
   ratingAverage?: number | null;
   reviewCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type DoctorProfile = DoctorSummary & {
@@ -220,8 +238,10 @@ export type PatientSummary = {
 };
 
 export type AppointmentStatusHistory = {
+  actor?: Role | "SYSTEM" | null;
   id?: string;
   fromStatus?: AppointmentStatus | null;
+  note?: string | null;
   toStatus: AppointmentStatus;
   reason?: string | null;
   actorRole?: Role | "SYSTEM" | null;
@@ -369,11 +389,97 @@ export type DoctorStatistics = {
         type: "SYSTEM";
       }
     | {
-        doctor: Pick<DoctorSummary, "avatarUrl" | "fullName" | "userID"> & {
+        doctor: Pick<DoctorSummary, "avatarUrl" | "fullName"> & {
+          id?: string;
           status?: UserStatus;
+          userID?: string;
         };
         type: "DOCTOR";
       };
   statusBreakdown: Record<AppointmentStatus, number>;
   summary: StatisticsSummary;
+};
+
+export type AdminTopDoctor = {
+  avatarUrl?: string | null;
+  completedAppointments: number;
+  fullName: string;
+  id: string;
+  status: UserStatus;
+  totalAppointments: number;
+};
+
+export type AdminDashboardStatistics = DoctorStatistics & {
+  system?: {
+    activeDoctors: number;
+    activePatients: number;
+    newPatients: number;
+    topDoctors: AdminTopDoctor[];
+    totalPatients: number;
+  };
+};
+
+export type AdminDoctor = DoctorProfile & {
+  _count?: {
+    appointments: number;
+    reviews: number;
+    scheduleOverrides?: number;
+  };
+  averageRating?: number | null;
+  createdAt?: string;
+  user: {
+    createdAt?: string;
+    email?: string | null;
+    lastLoginAt?: string | null;
+    status: UserStatus;
+    statusHistory?: UserStatusHistory[];
+    updatedAt?: string;
+  };
+};
+
+export type AdminDoctorDetail = AdminDoctor & {
+  weeklySchedule?: WeeklySchedule;
+};
+
+export type AdminPatient = {
+  _count?: {
+    appointments: number;
+    doctorReviews: number;
+  };
+  address?: string | null;
+  avatar?: string | null;
+  createdAt?: string;
+  dateOfBirth?: string;
+  fullName: string;
+  gender: Gender;
+  user: {
+    createdAt?: string;
+    email?: string | null;
+    lastLoginAt?: string | null;
+    phone?: string | null;
+    status: UserStatus;
+    statusHistory?: UserStatusHistory[];
+    updatedAt?: string;
+  };
+  userID: string;
+  updatedAt?: string;
+};
+
+export type AdminPatientDetail = AdminPatient & {
+  drugAllergies?: string | null;
+  medicalHistory?: string | null;
+};
+
+export type AdminReview = DoctorReview & {
+  doctor?: Pick<DoctorSummary, "fullName" | "userID"> | null;
+  moderatedAt?: string | null;
+  moderatedBy?: {
+    email?: string | null;
+    id?: string;
+    phone?: string | null;
+  } | null;
+  patient?: {
+    fullName?: string;
+    userID?: string;
+  } | null;
 };
