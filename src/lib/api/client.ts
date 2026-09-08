@@ -71,11 +71,29 @@ export async function apiFetch<T>(
     requestHeaders.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  const response = await fetch(buildUrl(path, params), {
+  let response = await fetch(buildUrl(path, params), {
     ...init,
     body: requestBody,
     headers: requestHeaders,
   });
+
+  if (response.status === 401 && accessToken && path !== "/auth/refresh") {
+    const session = useAuthStore.getState();
+    if (session.accessToken) {
+      const nextToken =
+        session.accessToken !== accessToken
+          ? session.accessToken
+          : await refreshAccessToken();
+      if (nextToken) {
+        requestHeaders.set("Authorization", `Bearer ${nextToken}`);
+        response = await fetch(buildUrl(path, params), {
+          ...init,
+          body: requestBody,
+          headers: requestHeaders,
+        });
+      }
+    }
+  }
 
   const payload = (await response.json()) as ApiEnvelope<T>;
 
@@ -92,3 +110,48 @@ export async function apiFetch<T>(
 
   return payload.data;
 }
+
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken() {
+  if (refreshPromise) return refreshPromise;
+  const session = useAuthStore.getState();
+  if (!session.refreshToken || !session.user) {
+    session.clearSession();
+    return null;
+  }
+  refreshPromise = (async () => {
+    const response = await fetch(buildUrl("/auth/refresh"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
+    });
+    const payload = (await response.json()) as ApiEnvelope<{
+      accessToken: string;
+      refreshToken: string;
+    }>;
+    // Ignore refresh responses belonging to a session that has since logged out or changed.
+    if (useAuthStore.getState().refreshToken !== session.refreshToken)
+      return null;
+    if (!response.ok || !payload.success) {
+      if (response.status === 401 || response.status === 403)
+        session.clearSession();
+      throw new ApiError(
+        response.status,
+        payload.success
+          ? { code: "REFRESH_FAILED", message: response.statusText }
+          : payload.error,
+      );
+    }
+    useAuthStore
+      .getState()
+      .setSession({ ...payload.data, user: session.user! });
+    return payload.data.accessToken;
+  })();
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
+}
+import { useAuthStore } from "@/lib/auth/session-store";

@@ -1,10 +1,13 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuthStore } from "@/lib/auth/session-store";
+import { LoadingBlock } from "@/components/ui/feedback";
 import { Toaster } from "sonner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const hydrated = useAuthStore((state) => state.hydrated);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -17,9 +20,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }),
   );
 
+  useEffect(() => {
+    Promise.resolve(useAuthStore.persist.rehydrate()).finally(() =>
+      useAuthStore.getState().finishHydration(),
+    );
+    return useAuthStore.subscribe((state, previous) => {
+      if (state.user?.id !== previous.user?.id) queryClient.clear();
+    });
+  }, [queryClient]);
+
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      {hydrated ? children : <LoadingBlock className="min-h-screen" />}
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );

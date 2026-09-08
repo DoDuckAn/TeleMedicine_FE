@@ -6,6 +6,8 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import type { AuthSessionResponse, AuthUser, Role } from "@/types/api";
 
 type AuthState = {
+  hydrated: boolean;
+  finishHydration: () => void;
   accessToken: string | null;
   clearSession: () => void;
   refreshToken: string | null;
@@ -16,6 +18,8 @@ type AuthState = {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
+      hydrated: false,
+      finishHydration: () => set({ hydrated: true }),
       accessToken: null,
       clearSession: () =>
         set({
@@ -35,6 +39,12 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "khambenhtuxa-session",
       storage: createJSONStorage(() => localStorage),
+      skipHydration: true,
+      partialize: ({ accessToken, refreshToken, user }) => ({
+        accessToken,
+        refreshToken,
+        user,
+      }),
     },
   ),
 );
