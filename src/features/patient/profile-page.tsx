@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, Loader2, Save, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -24,7 +24,10 @@ import type { Gender } from "@/types/api";
 
 const profileSchema = z.object({
   address: z.string().optional(),
-  dateOfBirth: z.string().min(1, "Chọn ngày sinh"),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Chọn ngày sinh")
+    .refine(isValidDate, "Ngày sinh không hợp lệ"),
   drugAllergies: z.string().optional(),
   email: z.union([z.string().email("Email không hợp lệ"), z.literal("")]),
   fullName: z.string().min(2, "Nhập họ tên"),
@@ -65,7 +68,7 @@ export function PatientProfilePage() {
 
     return {
       address: profile.address ?? "",
-      dateOfBirth: profile.dateOfBirth ?? "",
+      dateOfBirth: profile.dateOfBirth?.slice(0, 10) ?? "",
       drugAllergies: profile.drugAllergies ?? "",
       email: profileQuery.data?.email ?? "",
       fullName: profile.fullName ?? "",
@@ -216,7 +219,21 @@ export function PatientProfilePage() {
                   error={form.formState.errors.dateOfBirth?.message}
                   label="Ngày sinh"
                 >
-                  <Input type="date" {...form.register("dateOfBirth")} />
+                  <Controller
+                    control={form.control}
+                    name="dateOfBirth"
+                    render={({ field }) => (
+                      <Input
+                        type="date"
+                        required
+                        name={field.name}
+                        ref={field.ref}
+                        value={field.value}
+                        onDateChange={field.onChange}
+                        onDateBlur={field.onBlur}
+                      />
+                    )}
+                  />
                 </Field>
                 <Field
                   error={form.formState.errors.gender?.message}
@@ -286,4 +303,15 @@ function nullable(value?: string | null) {
   const trimmed = value?.trim();
 
   return trimmed ? trimmed : null;
+}
+
+function isValidDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
 }

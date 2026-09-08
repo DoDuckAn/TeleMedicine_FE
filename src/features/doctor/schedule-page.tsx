@@ -309,7 +309,7 @@ export function DoctorSchedulePage() {
               <Input
                 aria-label="Chọn tuần"
                 className="w-40"
-                onChange={(event) => selectWeek(event.target.value)}
+                onDateChange={(dateValue) => selectWeek(dateValue)}
                 type="date"
                 value={weekStart}
               />
@@ -400,10 +400,10 @@ export function DoctorSchedulePage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Bắt đầu">
                     <Input
-                      onChange={(event) =>
+                      onDateChange={(dateValue) =>
                         setOverrideForm((current) => ({
                           ...current,
-                          startAt: event.target.value,
+                          startAt: dateValue,
                         }))
                       }
                       type="datetime-local"
@@ -412,10 +412,10 @@ export function DoctorSchedulePage() {
                   </Field>
                   <Field label="Kết thúc">
                     <Input
-                      onChange={(event) =>
+                      onDateChange={(dateValue) =>
                         setOverrideForm((current) => ({
                           ...current,
-                          endAt: event.target.value,
+                          endAt: dateValue,
                         }))
                       }
                       type="datetime-local"
@@ -469,10 +469,10 @@ export function DoctorSchedulePage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Bắt đầu">
                     <Input
-                      onChange={(event) =>
+                      onDateChange={(dateValue) =>
                         setRestoreForm((current) => ({
                           ...current,
-                          startAt: event.target.value,
+                          startAt: dateValue,
                         }))
                       }
                       type="datetime-local"
@@ -481,10 +481,10 @@ export function DoctorSchedulePage() {
                   </Field>
                   <Field label="Kết thúc">
                     <Input
-                      onChange={(event) =>
+                      onDateChange={(dateValue) =>
                         setRestoreForm((current) => ({
                           ...current,
-                          endAt: event.target.value,
+                          endAt: dateValue,
                         }))
                       }
                       type="datetime-local"
@@ -676,7 +676,12 @@ function CalendarPanel({
                           {slot.appointment ? (
                             <Link
                               className="mt-1 block truncate underline underline-offset-2"
-                              href={`/doctor/appointments/${slot.appointment.id}`}
+                              href={
+                                slot.appointment.status ===
+                                "PENDING_CONFIRMATION"
+                                  ? "/doctor/requests"
+                                  : `/doctor/appointments/${slot.appointment.id}`
+                              }
                             >
                               {patientName}
                             </Link>

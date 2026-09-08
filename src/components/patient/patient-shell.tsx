@@ -21,7 +21,7 @@ import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
 
 const navItems = [
   { href: "/patient/dashboard", icon: Home, label: "Tổng quan" },
-  { href: "/doctors", icon: Search, label: "Tìm bác sĩ" },
+  { href: "/patient/doctors", icon: Search, label: "Đặt lịch hẹn" },
   { href: "/patient/appointments", icon: CalendarClock, label: "Lịch hẹn" },
   { href: "/patient/history", icon: ClipboardList, label: "Lịch sử khám" },
   { href: "/notifications", icon: Bell, label: "Thông báo" },
@@ -72,8 +72,7 @@ export function PatientShell({
           {navItems.map((item) => {
             const Icon = item.icon;
             const active =
-              pathname === item.href ||
-              (item.href !== "/doctors" && pathname.startsWith(item.href));
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
 
             return (
               <Link
@@ -106,10 +105,10 @@ export function PatientShell({
             <div className="flex items-center gap-2">
               <Link
                 className={buttonVariants({ size: "sm", variant: "success" })}
-                href="/doctors"
+                href="/patient/doctors"
               >
                 <Search aria-hidden="true" className="size-4" />
-                Tìm bác sĩ
+                Đặt lịch hẹn
               </Link>
               <button
                 className={buttonVariants({ size: "sm", variant: "outline" })}

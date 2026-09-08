@@ -5,7 +5,7 @@ import { ArrowRight, Loader2, Phone, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
   RecaptchaVerifier,
@@ -222,7 +222,21 @@ export function PatientAuthPage() {
                 error={registerForm.formState.errors.dateOfBirth?.message}
                 label="Ngày sinh"
               >
-                <Input type="date" {...registerForm.register("dateOfBirth")} />
+                <Controller
+                  control={registerForm.control}
+                  name="dateOfBirth"
+                  render={({ field }) => (
+                    <Input
+                      type="date"
+                      required
+                      name={field.name}
+                      ref={field.ref}
+                      value={field.value}
+                      onDateChange={field.onChange}
+                      onDateBlur={field.onBlur}
+                    />
+                  )}
+                />
               </Field>
               <Field
                 error={registerForm.formState.errors.gender?.message}

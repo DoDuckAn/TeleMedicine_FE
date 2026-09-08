@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/appointment/status-badge";
+import { Modal } from "@/components/ui/modal";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/feedback";
@@ -124,8 +125,8 @@ export function AdminAppointmentsPage() {
             </Select>
             <Input
               aria-label="Từ ngày"
-              onChange={(event) => {
-                setFrom(event.target.value);
+              onDateChange={(dateValue) => {
+                setFrom(dateValue);
                 setPage(1);
               }}
               type="date"
@@ -133,8 +134,8 @@ export function AdminAppointmentsPage() {
             />
             <Input
               aria-label="Đến ngày"
-              onChange={(event) => {
-                setTo(event.target.value);
+              onDateChange={(dateValue) => {
+                setTo(dateValue);
                 setPage(1);
               }}
               type="date"
@@ -292,7 +293,7 @@ function AppointmentDetailModal({
     : false;
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-900/35 px-4 py-6">
+    <Modal label="Chi tiết lịch hẹn" onClose={onClose}>
       <section className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-5 shadow-soft">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -431,7 +432,7 @@ function AppointmentDetailModal({
           )}
         </div>
       </section>
-    </div>
+    </Modal>
   );
 }
 

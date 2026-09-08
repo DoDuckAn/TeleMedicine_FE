@@ -86,8 +86,8 @@ export function PatientHistoryPage() {
             </Select>
             <Input
               aria-label="Từ ngày"
-              onChange={(event) => {
-                setFrom(event.target.value);
+              onDateChange={(dateValue) => {
+                setFrom(dateValue);
                 setPage(1);
               }}
               type="date"
@@ -95,8 +95,8 @@ export function PatientHistoryPage() {
             />
             <Input
               aria-label="Đến ngày"
-              onChange={(event) => {
-                setTo(event.target.value);
+              onDateChange={(dateValue) => {
+                setTo(dateValue);
                 setPage(1);
               }}
               type="date"

@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { ReviewStatusBadge } from "@/components/admin/admin-badges";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/feedback";
@@ -419,7 +420,7 @@ function ModerationModal({
   target: ModerationTarget;
 }) {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-900/35 px-4 py-6">
+    <Modal label="Kiểm duyệt đánh giá" onClose={onClose}>
       <section className="w-full max-w-lg rounded-lg bg-white p-5 shadow-soft">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -485,6 +486,6 @@ function ModerationModal({
           </Button>
         </div>
       </section>
-    </div>
+    </Modal>
   );
 }

@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Search, SlidersHorizontal } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+import { PatientShell } from "@/components/patient/patient-shell";
 import { PublicShell } from "@/components/public/public-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
@@ -14,7 +15,8 @@ import { getDoctors, getSpecialties } from "@/lib/api/public";
 
 import { DoctorCard } from "./doctor-card";
 
-export function DoctorsListPage() {
+export function DoctorsListPage({ patient = false }: { patient?: boolean }) {
+  const Shell = patient ? PatientShell : PublicShell;
   const searchParams = useSearchParams();
   const [keyword, setKeyword] = useState(() => searchParams.get("q") ?? "");
   const [specialtyId, setSpecialtyId] = useState(
@@ -53,7 +55,7 @@ export function DoctorsListPage() {
   const doctors = doctorsQuery.data?.items ?? [];
 
   return (
-    <PublicShell>
+    <Shell title="Tìm bác sĩ">
       <main className="bg-slate-50/70">
         <section className="border-b border-blue-100 bg-white py-10">
           <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
@@ -187,6 +189,6 @@ export function DoctorsListPage() {
           ) : null}
         </section>
       </main>
-    </PublicShell>
+    </Shell>
   );
 }

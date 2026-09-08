@@ -49,10 +49,10 @@ export function DoctorAppointmentCard({
               <FileText aria-hidden="true" className="size-4 text-primary" />
               {appointment.visitReason}
             </p>
-            {appointment.patient?.patientProfile?.drugAllergies ? (
+            {appointment.patient?.drugAllergies ? (
               <p className="flex items-center gap-2 sm:col-span-2">
                 <UserRound aria-hidden="true" className="size-4 text-red-600" />
-                Dị ứng: {appointment.patient.patientProfile.drugAllergies}
+                Dị ứng: {appointment.patient.drugAllergies}
               </p>
             ) : null}
           </div>

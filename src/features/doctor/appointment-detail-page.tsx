@@ -59,6 +59,10 @@ export function DoctorAppointmentDetailPage({
     enabled,
     queryFn: () => getDoctorAppointment(appointmentId, auth),
     queryKey: ["doctor", "appointments", appointmentId],
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
   });
 
   const rejectForm = useForm<ReasonForm>({
@@ -205,24 +209,15 @@ export function DoctorAppointmentDetailPage({
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <ProfileBlock
                 label="Tiền sử bệnh"
-                value={
-                  appointment.patient?.patientProfile?.medicalHistory ??
-                  "Chưa cập nhật"
-                }
+                value={appointment.patient?.medicalHistory ?? "Chưa cập nhật"}
               />
               <ProfileBlock
                 label="Dị ứng thuốc"
-                value={
-                  appointment.patient?.patientProfile?.drugAllergies ??
-                  "Chưa cập nhật"
-                }
+                value={appointment.patient?.drugAllergies ?? "Chưa cập nhật"}
               />
               <ProfileBlock
                 label="Địa chỉ"
-                value={
-                  appointment.patient?.patientProfile?.address ??
-                  "Chưa cập nhật"
-                }
+                value={appointment.patient?.address ?? "Chưa cập nhật"}
               />
               <ProfileBlock
                 label="Email"

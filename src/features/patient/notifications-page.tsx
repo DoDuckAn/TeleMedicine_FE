@@ -9,13 +9,16 @@ import {
   Mail,
   Settings,
   Smartphone,
+  UserRound,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { StatusBadge } from "@/components/appointment/status-badge";
 import { PatientShell } from "@/components/patient/patient-shell";
+import { Modal } from "@/components/ui/modal";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/feedback";
 import {
@@ -26,6 +29,7 @@ import {
   markNotificationRead,
   updateNotificationPreferences,
 } from "@/lib/api/notifications";
+import { getPatientMe } from "@/lib/api/patient";
 import { useAuthStore } from "@/lib/auth/session-store";
 import { formatDateTime } from "@/lib/format";
 import type { NotificationPreferences } from "@/types/api";
@@ -46,12 +50,20 @@ const eventLabels: Record<
 };
 
 export function NotificationsPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
   const auth = { accessToken: accessToken ?? "" };
   const enabled = Boolean(accessToken);
   const [page, setPage] = useState(1);
   const [unreadOnly, setUnreadOnly] = useState(false);
+  const [showEmailRequiredModal, setShowEmailRequiredModal] = useState(false);
+
+  const patientQuery = useQuery({
+    enabled,
+    queryFn: () => getPatientMe(auth),
+    queryKey: ["patient", "me"],
+  });
 
   const notificationsQuery = useQuery({
     enabled,
@@ -284,13 +296,23 @@ export function NotificationsPage() {
                 />
                 <PreferenceToggle
                   checked={preferences.channels.email}
+                  disabled={patientQuery.isLoading}
                   icon={Mail}
                   label="Email"
-                  onChange={(checked) =>
+                  onChange={(checked) => {
+                    if (
+                      checked &&
+                      patientQuery.isSuccess &&
+                      !patientQuery.data.email?.trim()
+                    ) {
+                      setShowEmailRequiredModal(true);
+                      return;
+                    }
+
                     preferencesMutation.mutate({
                       channels: { email: checked },
-                    })
-                  }
+                    });
+                  }}
                 />
               </div>
 
@@ -321,23 +343,70 @@ export function NotificationsPage() {
           )}
         </aside>
       </div>
+
+      {showEmailRequiredModal ? (
+        <Modal
+          label="Cần cập nhật email"
+          onClose={() => setShowEmailRequiredModal(false)}
+        >
+          <section className="w-full max-w-md rounded-lg bg-white p-5 shadow-soft">
+            <div className="flex items-start gap-3">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
+                <UserRound aria-hidden="true" className="size-5" />
+              </span>
+              <div>
+                <h2
+                  className="text-xl font-bold text-slate-900"
+                  id="email-required-title"
+                >
+                  Cần cập nhật email
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Vui lòng cập nhật email trong hồ sơ trước khi bật thông báo
+                  qua email.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <Button
+                onClick={() => setShowEmailRequiredModal(false)}
+                variant="outline"
+              >
+                Hủy
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowEmailRequiredModal(false);
+                  router.push("/patient/profile");
+                }}
+                variant="primary"
+              >
+                Cập nhật email
+              </Button>
+            </div>
+          </section>
+        </Modal>
+      ) : null}
     </PatientShell>
   );
 }
 
 function PreferenceToggle({
   checked,
+  disabled = false,
   icon: Icon,
   label,
   onChange,
 }: {
   checked: boolean;
+  disabled?: boolean;
   icon?: React.ComponentType<{ className?: string }>;
   label: string;
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-blue-100 bg-slate-50 px-3 py-2.5 text-sm">
+    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-blue-100 bg-slate-50 px-3 py-2.5 text-sm has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
       <span className="flex items-center gap-2 font-semibold text-slate-700">
         {Icon ? (
           <Icon aria-hidden="true" className="size-4 text-primary" />
@@ -347,6 +416,7 @@ function PreferenceToggle({
       <input
         checked={checked}
         className="size-5 rounded border-blue-200 text-primary focus:ring-blue-200"
+        disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
         type="checkbox"
       />

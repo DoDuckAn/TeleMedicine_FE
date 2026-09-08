@@ -3,6 +3,7 @@
 import { Loader2, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 
+import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
 import { nextUserStatus, statusActionLabel } from "@/lib/admin-format";
@@ -25,7 +26,7 @@ export function StatusChangeModal({
   const nextStatus = nextUserStatus(currentStatus);
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-900/35 px-4">
+    <Modal label="Thay đổi trạng thái" onClose={onClose}>
       <section className="w-full max-w-lg rounded-lg bg-white p-5 shadow-soft">
         <div className="flex items-start gap-3">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
@@ -70,6 +71,6 @@ export function StatusChangeModal({
           </Button>
         </div>
       </section>
-    </div>
+    </Modal>
   );
 }

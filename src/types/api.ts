@@ -229,7 +229,7 @@ export type PatientMe = {
   patientProfile: PatientProfile;
 };
 
-export type PatientSummary = {
+export type PatientSummary = Partial<PatientProfile> & {
   userID?: string;
   fullName?: string;
   phone?: string | null;

@@ -19,7 +19,31 @@ import type {
 } from "@/types/api";
 
 import { apiFetch } from "./client";
+import type { DoctorScheduleOverrideList } from "@/types/api";
 import type { AuthenticatedOptions } from "./patient";
+
+export function getAdminDoctorOverrides(
+  doctorId: string,
+  params: { from?: string; to?: string },
+  { accessToken }: AuthenticatedOptions,
+) {
+  return apiFetch<DoctorScheduleOverrideList>(
+    `/admin/doctors/${doctorId}/overrides`,
+    { accessToken, params },
+  );
+}
+
+export function updateSpecialtyDoctors(
+  specialtyId: string,
+  payload: { addDoctorIds: string[]; removeDoctorIds: string[] },
+  { accessToken }: AuthenticatedOptions,
+) {
+  return apiFetch<{ id: string }>(`/specialties/${specialtyId}/doctors`, {
+    accessToken,
+    json: payload,
+    method: "PATCH",
+  });
+}
 
 export type StatisticsParams = {
   from?: string;

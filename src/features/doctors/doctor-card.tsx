@@ -9,6 +9,7 @@ import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 import { formatRating } from "@/lib/format";
+import { useAuthStore } from "@/lib/auth/session-store";
 import { cn } from "@/lib/utils";
 import type { DoctorSummary } from "@/types/api";
 
@@ -21,11 +22,20 @@ type DoctorCardProps = {
 };
 
 export function DoctorCard({ className, doctor, featured }: DoctorCardProps) {
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const user = useAuthStore((state) => state.user);
   const specialties =
     doctor.specialties?.map((specialty) => specialty.name).filter(Boolean) ??
     [];
+  const detailPath =
+    accessToken && user?.role === "PATIENT"
+      ? `/patient/doctors/${doctor.userID}`
+      : `/doctors/${doctor.userID}`;
   const bookingPath = `/patient/book/${doctor.userID}`;
   const loginPath = `/auth/patient?next=${encodeURIComponent(bookingPath)}`;
+  const canBook = !user || user.role === "PATIENT";
+  const bookingHref =
+    accessToken && user?.role === "PATIENT" ? bookingPath : loginPath;
 
   return (
     <article
@@ -37,7 +47,7 @@ export function DoctorCard({ className, doctor, featured }: DoctorCardProps) {
     >
       <Link
         className="block aspect-[4/3] overflow-hidden rounded-lg border border-blue-100 bg-blue-50 md:aspect-square"
-        href={`/doctors/${doctor.userID}`}
+        href={detailPath}
       >
         <DoctorAvatar alt={doctor.fullName} src={doctor.avatarUrl} />
       </Link>
@@ -54,7 +64,7 @@ export function DoctorCard({ className, doctor, featured }: DoctorCardProps) {
           </span>
         </div>
 
-        <Link href={`/doctors/${doctor.userID}`}>
+        <Link href={detailPath}>
           <h3 className="mt-3 text-xl font-bold text-slate-900 transition hover:text-primary">
             {doctor.fullName}
           </h3>
@@ -93,16 +103,18 @@ export function DoctorCard({ className, doctor, featured }: DoctorCardProps) {
 
       {!featured ? (
         <div className="flex items-end gap-2 md:flex-col md:justify-end">
-          <Link
-            className={buttonVariants({ size: "sm", variant: "success" })}
-            href={loginPath}
-          >
-            <CalendarPlus aria-hidden="true" className="size-4" />
-            Đặt lịch hẹn
-          </Link>
+          {canBook && (
+            <Link
+              className={buttonVariants({ size: "sm", variant: "success" })}
+              href={bookingHref}
+            >
+              <CalendarPlus aria-hidden="true" className="size-4" />
+              Đặt lịch hẹn
+            </Link>
+          )}
           <Link
             className={buttonVariants({ size: "sm", variant: "primary" })}
-            href={`/doctors/${doctor.userID}`}
+            href={detailPath}
           >
             Xem chi tiết
           </Link>

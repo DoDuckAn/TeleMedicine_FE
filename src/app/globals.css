@@ -2,6 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+.date-picker-field {
+  width: 100%;
+}
+
+.date-picker-field .react-datepicker__view-calendar-icon input {
+  padding-left: 2.4rem;
+  padding-right: 2rem;
+}
+
+.date-picker-field .react-datepicker__calendar-icon {
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: hsl(var(--primary));
+}
+
+.vi-date-popper {
+  z-index: 60;
+}
+
+.vi-calendar {
+  font-family: inherit;
+  border-color: hsl(var(--border));
+  border-radius: 8px;
+  box-shadow: 0 8px 24px #00000018;
+}
+
+.vi-calendar .react-datepicker__header {
+  background: #eff6ff;
+  border-color: hsl(var(--border));
+}
+
+.vi-calendar .react-datepicker__day--selected,
+.vi-calendar .react-datepicker__time-list-item--selected {
+  background: hsl(var(--primary)) !important;
+}
+
+.vi-calendar select {
+  border-radius: 4px;
+  padding: 0.25rem 1.5rem 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 400px) {
+  .vi-calendar .react-datepicker__day,
+  .vi-calendar .react-datepicker__day-name {
+    width: 1.7rem;
+    margin: 0.12rem;
+  }
+  .vi-calendar .react-datepicker__time-container,
+  .vi-calendar
+    .react-datepicker__time-container
+    .react-datepicker__time
+    .react-datepicker__time-box {
+    width: 70px;
+  }
+  .vi-calendar .react-datepicker__month-dropdown-container--select,
+  .vi-calendar .react-datepicker__year-dropdown-container--select {
+    margin: 0 4px;
+  }
+  .vi-calendar select {
+    padding: 0.25rem 1.25rem 0.25rem 0.25rem;
+    font-size: 0.75rem;
+  }
+}
+
 :root {
   --background: 210 40% 98%;
   --foreground: 222 47% 11%;

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   CalendarPlus,
   ChevronDown,
@@ -7,19 +9,38 @@ import {
   Search,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { LoadingBlock } from "@/components/ui/feedback";
 
 import { BrandMark } from "@/components/brand-mark";
 import { buttonVariants } from "@/components/ui/button";
+import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Trang chủ" },
   { href: "/doctors", label: "Chuyên gia - Bác sĩ" },
   { href: "/doctors", label: "Chuyên khoa" },
-  { href: "/auth/patient", label: "Đặt hẹn khám" },
+  { href: "/doctors", label: "Đặt hẹn khám" },
 ];
 
 export function PublicShell({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const user = useAuthStore((state) => state.user);
+  const pathname = usePathname();
+  useEffect(() => {
+    if (accessToken && user) {
+      const destination =
+        user.role === "PATIENT" && pathname.startsWith("/doctors")
+          ? "/patient" + pathname + window.location.search
+          : getRoleHome(user.role);
+      router.replace(destination);
+    }
+  }, [accessToken, user, pathname, router]);
+  if (accessToken && user) return <LoadingBlock className="min-h-screen" />;
+
   return (
     <div className="min-h-screen bg-white">
       <header className="sticky top-0 z-40 border-b border-blue-100 bg-white/95 shadow-sm backdrop-blur">
@@ -84,20 +105,22 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <div className="flex flex-1 justify-end gap-2 md:flex-none">
-            <Link
-              className={buttonVariants({ size: "sm", variant: "outline" })}
-              href="/auth/patient"
-            >
-              <LogIn aria-hidden="true" className="size-4" />
-              Đăng nhập
-            </Link>
-            <Link
-              className={buttonVariants({ size: "sm", variant: "success" })}
-              href="/auth/patient?mode=register"
-            >
-              <CalendarPlus aria-hidden="true" className="size-4" />
-              Đăng ký khám
-            </Link>
+            <>
+              <Link
+                className={buttonVariants({ size: "sm", variant: "outline" })}
+                href="/auth/patient"
+              >
+                <LogIn aria-hidden="true" className="size-4" />
+                Đăng nhập
+              </Link>
+              <Link
+                className={buttonVariants({ size: "sm", variant: "success" })}
+                href="/auth/patient?mode=register"
+              >
+                <CalendarPlus aria-hidden="true" className="size-4" />
+                Đăng ký khám
+              </Link>
+            </>
           </div>
         </div>
       </header>
@@ -122,8 +145,11 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
             <p className="font-semibold">Truy cập nhanh</p>
             <div className="mt-3 flex flex-col gap-2 text-blue-100">
               <Link href="/doctors">Danh sách bác sĩ</Link>
-              <Link href="/auth/patient">Đăng nhập bệnh nhân</Link>
-              <Link href="/auth/staff">Đăng nhập nhân viên</Link>
+
+              <>
+                <Link href="/auth/patient">Đăng nhập bệnh nhân</Link>
+                <Link href="/auth/staff">Đăng nhập nhân viên</Link>
+              </>
             </div>
           </div>
         </div>

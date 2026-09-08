@@ -83,13 +83,6 @@ export function DoctorShell({
               <h1 className="text-xl font-bold text-slate-900">{title}</h1>
             </div>
             <div className="flex items-center gap-2">
-              <Link
-                className={buttonVariants({ size: "sm", variant: "success" })}
-                href="/doctor/requests"
-              >
-                <ClipboardList aria-hidden="true" className="size-4" />
-                Yêu cầu khám
-              </Link>
               <button
                 className={buttonVariants({ size: "sm", variant: "outline" })}
                 onClick={logout}

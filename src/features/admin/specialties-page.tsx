@@ -1,22 +1,20 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Save, Trash2, Undo2, UserPlus, X } from "lucide-react";
+import { Loader2, Plus, Save, Trash2, Undo2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { SpecialtyDoctorsModal } from "@/components/admin/specialty-doctors-modal";
 import { SpecialtyStatusBadge } from "@/components/admin/admin-badges";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/feedback";
 import {
-  addDoctorToSpecialty,
   createAdminSpecialty,
   deleteAdminSpecialty,
-  listAdminDoctors,
   listAdminSpecialties,
-  removeDoctorFromSpecialty,
   updateAdminSpecialty,
 } from "@/lib/api/admin";
 import { nullableText } from "@/lib/admin-format";
@@ -44,29 +42,14 @@ export function AdminSpecialtiesPage() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const auth = { accessToken: accessToken ?? "" };
   const [form, setForm] = useState<SpecialtyForm>(emptyForm);
-  const [doctorSelects, setDoctorSelects] = useState<Record<string, string>>(
-    {},
+  const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | null>(
+    null,
   );
 
   const specialtiesQuery = useQuery({
     enabled: Boolean(accessToken),
     queryFn: () => listAdminSpecialties(auth),
     queryKey: ["admin", "specialties"],
-  });
-
-  const doctorsQuery = useQuery({
-    enabled: Boolean(accessToken),
-    queryFn: () =>
-      listAdminDoctors(
-        {
-          limit: 100,
-          order: "asc",
-          sortBy: "fullName",
-          status: "ACTIVE",
-        },
-        auth,
-      ),
-    queryKey: ["admin", "doctors", "active-options"],
   });
 
   const createMutation = useMutation({
@@ -139,45 +122,7 @@ export function AdminSpecialtiesPage() {
     },
   });
 
-  const addDoctorMutation = useMutation({
-    mutationFn: ({
-      doctorId,
-      specialtyId,
-    }: {
-      doctorId: string;
-      specialtyId: string;
-    }) => addDoctorToSpecialty(specialtyId, doctorId, auth),
-    onError: (error) => {
-      console.error(error);
-      toast.error("Không gán được bác sĩ.");
-    },
-    onSuccess: () => {
-      toast.success("Đã gán bác sĩ vào chuyên khoa.");
-      setDoctorSelects({});
-      invalidateSpecialties(queryClient);
-    },
-  });
-
-  const removeDoctorMutation = useMutation({
-    mutationFn: ({
-      doctorId,
-      specialtyId,
-    }: {
-      doctorId: string;
-      specialtyId: string;
-    }) => removeDoctorFromSpecialty(specialtyId, doctorId, auth),
-    onError: (error) => {
-      console.error(error);
-      toast.error("Không gỡ được bác sĩ khỏi chuyên khoa.");
-    },
-    onSuccess: () => {
-      toast.success("Đã gỡ bác sĩ khỏi chuyên khoa.");
-      invalidateSpecialties(queryClient);
-    },
-  });
-
   const specialties = specialtiesQuery.data ?? [];
-  const doctors = doctorsQuery.data?.items ?? [];
 
   function submitForm() {
     if (!form.code.trim() || !form.name.trim()) {
@@ -299,16 +244,6 @@ export function AdminSpecialtiesPage() {
             <ErrorState message="Chưa tải được danh sách chuyên khoa." />
           ) : specialties.length ? (
             specialties.map((specialty) => {
-              const currentDoctorIds = new Set(
-                specialty.doctors?.map((doctor) => doctor.userID) ?? [],
-              );
-              const selectedDoctorId = doctorSelects[specialty.id] ?? "";
-              const canAdd = Boolean(
-                selectedDoctorId &&
-                specialty.status === "ACTIVE" &&
-                !currentDoctorIds.has(selectedDoctorId),
-              );
-
               return (
                 <article
                   className="rounded-lg border border-blue-100 bg-white p-5 shadow-sm"
@@ -359,78 +294,13 @@ export function AdminSpecialtiesPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 border-t border-blue-100 pt-5">
-                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-                      <Select
-                        aria-label="Chọn bác sĩ"
-                        disabled={
-                          doctorsQuery.isLoading ||
-                          specialty.status !== "ACTIVE"
-                        }
-                        onChange={(event) =>
-                          setDoctorSelects((current) => ({
-                            ...current,
-                            [specialty.id]: event.target.value,
-                          }))
-                        }
-                        value={selectedDoctorId}
-                      >
-                        <option value="">Chọn bác sĩ để gán</option>
-                        {doctors
-                          .filter(
-                            (doctor) => !currentDoctorIds.has(doctor.userID),
-                          )
-                          .map((doctor) => (
-                            <option key={doctor.userID} value={doctor.userID}>
-                              {doctor.fullName}
-                            </option>
-                          ))}
-                      </Select>
-                      <Button
-                        disabled={!canAdd || addDoctorMutation.isPending}
-                        onClick={() =>
-                          addDoctorMutation.mutate({
-                            doctorId: selectedDoctorId,
-                            specialtyId: specialty.id,
-                          })
-                        }
-                        variant="success"
-                      >
-                        <UserPlus aria-hidden="true" className="size-4" />
-                        Gán bác sĩ
-                      </Button>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {specialty.doctors?.length ? (
-                        specialty.doctors.map((doctor) => (
-                          <span
-                            className="inline-flex items-center gap-2 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-sm font-semibold text-primary"
-                            key={doctor.userID}
-                          >
-                            {doctor.fullName}
-                            <button
-                              className="text-slate-500 hover:text-destructive"
-                              disabled={removeDoctorMutation.isPending}
-                              onClick={() =>
-                                removeDoctorMutation.mutate({
-                                  doctorId: doctor.userID,
-                                  specialtyId: specialty.id,
-                                })
-                              }
-                              type="button"
-                            >
-                              <X aria-hidden="true" className="size-3.5" />
-                              <span className="sr-only">Gỡ bác sĩ</span>
-                            </button>
-                          </span>
-                        ))
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Chưa có bác sĩ active thuộc chuyên khoa này.
-                        </p>
-                      )}
-                    </div>
+                  <div className="mt-5 border-t border-blue-100 pt-4">
+                    <Button
+                      onClick={() => setSelectedSpecialty(specialty)}
+                      variant="outline"
+                    >
+                      Danh sách bác sĩ
+                    </Button>
                   </div>
                 </article>
               );
@@ -443,6 +313,12 @@ export function AdminSpecialtiesPage() {
           )}
         </div>
       </section>
+      {selectedSpecialty && (
+        <SpecialtyDoctorsModal
+          specialty={selectedSpecialty}
+          onClose={() => setSelectedSpecialty(null)}
+        />
+      )}
     </AdminShell>
   );
 }

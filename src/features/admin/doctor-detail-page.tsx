@@ -24,7 +24,8 @@ import {
 import { AdminShell } from "@/components/admin/admin-shell";
 import { AdminWeeklyScheduleEditor } from "@/components/admin/admin-weekly-schedule-editor";
 import { StatusChangeModal } from "@/components/admin/status-change-modal";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { AdminDoctorSchedule } from "@/components/admin/admin-doctor-schedule";
+import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/feedback";
 import {
@@ -259,16 +260,14 @@ export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
                   <ShieldAlert aria-hidden="true" className="size-4" />
                   {statusActionLabel(doctor.user.status)}
                 </Button>
-                <Link
-                  className={buttonVariants({ variant: "outline" })}
-                  href={`/doctors/${doctor.userID}`}
-                  target="_blank"
-                >
-                  Xem public
-                </Link>
               </div>
             </div>
           </section>
+
+          <AdminDoctorSchedule
+            doctorId={doctorId}
+            active={doctor.user.status === "ACTIVE"}
+          />
 
           <section className="grid gap-4 md:grid-cols-4">
             <QuickMetric

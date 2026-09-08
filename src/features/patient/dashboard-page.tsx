@@ -72,7 +72,7 @@ export function PatientDashboardPage() {
             </div>
             <Link
               className={buttonVariants({ size: "lg", variant: "success" })}
-              href="/doctors"
+              href="/patient/doctors"
             >
               <Search aria-hidden="true" className="size-5" />
               Tìm bác sĩ đặt lịch
@@ -138,7 +138,7 @@ export function PatientDashboardPage() {
                         size: "md",
                         variant: "success",
                       })}
-                      href="/doctors"
+                      href="/patient/doctors"
                     >
                       Tìm bác sĩ
                     </Link>

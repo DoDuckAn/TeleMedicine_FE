@@ -107,10 +107,10 @@ export function AdminDashboardPage() {
           <div className="mt-5 grid gap-3 border-t border-blue-100 pt-5 md:grid-cols-3">
             <Field label="Từ ngày">
               <Input
-                onChange={(event) =>
+                onDateChange={(dateValue) =>
                   setFilters((current) => ({
                     ...current,
-                    from: event.target.value,
+                    from: dateValue,
                   }))
                 }
                 type="date"
@@ -119,10 +119,10 @@ export function AdminDashboardPage() {
             </Field>
             <Field label="Đến ngày">
               <Input
-                onChange={(event) =>
+                onDateChange={(dateValue) =>
                   setFilters((current) => ({
                     ...current,
-                    to: event.target.value,
+                    to: dateValue,
                   }))
                 }
                 type="date"

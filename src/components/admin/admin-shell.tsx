@@ -7,7 +7,6 @@ import {
   MessageSquareText,
   Stethoscope,
   Tags,
-  UserPlus,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -82,13 +81,6 @@ export function AdminShell({
               <h1 className="text-xl font-bold text-slate-900">{title}</h1>
             </div>
             <div className="flex items-center gap-2">
-              <Link
-                className={buttonVariants({ size: "sm", variant: "success" })}
-                href="/admin/doctors/new"
-              >
-                <UserPlus aria-hidden="true" className="size-4" />
-                Tạo bác sĩ
-              </Link>
               <button
                 className={buttonVariants({ size: "sm", variant: "outline" })}
                 onClick={logout}

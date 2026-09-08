@@ -95,14 +95,14 @@ export function HomePage() {
               <div className="absolute inset-0 bg-gradient-to-r from-blue-950/82 via-blue-800/54 to-blue-600/5" />
               <div className="relative grid min-h-[360px] items-center px-5 py-10 sm:px-10 lg:grid-cols-[0.92fr_1fr]">
                 <div className="max-w-xl">
-                  <p className="inline-flex items-center gap-2 rounded-md bg-white/14 px-3 py-1.5 text-sm font-semibold text-blue-50">
+                  <p className="inline-flex items-center gap-2 rounded-md bg-white/14 px-3 py-1.5 text-sm font-semibold text-blue-600">
                     <CheckCircle2 aria-hidden="true" className="size-4" />
                     Tư vấn sức khỏe trong tầm tay
                   </p>
-                  <h1 className="mt-5 text-4xl font-bold leading-tight sm:text-5xl">
+                  <h1 className="mt-5 text-4xl font-bold leading-tight sm:text-5xl text-blue-600">
                     Đặt lịch khám từ xa với bác sĩ chuyên khoa
                   </h1>
-                  <p className="mt-4 text-base leading-7 text-blue-50">
+                  <p className="mt-4 text-md leading-7 text-blue-600">
                     Tìm bác sĩ, chọn khung giờ còn trống và nhận tư vấn video
                     sau khi lịch được xác nhận.
                   </p>

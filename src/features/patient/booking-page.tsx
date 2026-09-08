@@ -130,7 +130,7 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
       <div className="mb-5">
         <Link
           className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
-          href="/doctors"
+          href="/patient/doctors"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
           Quay lại danh sách bác sĩ

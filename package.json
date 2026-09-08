@@ -23,6 +23,7 @@
     "lucide-react": "latest",
     "next": "latest",
     "react": "latest",
+    "react-datepicker": "9.1.0",
     "react-dom": "latest",
     "react-hook-form": "latest",
     "recharts": "latest",

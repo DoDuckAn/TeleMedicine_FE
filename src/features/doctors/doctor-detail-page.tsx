@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { PatientShell } from "@/components/patient/patient-shell";
 import { PublicShell } from "@/components/public/public-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/feedback";
@@ -22,15 +23,23 @@ import {
   getDoctorSchedule,
 } from "@/lib/api/public";
 import { getDoctorReviewReply } from "@/lib/doctor-reviews";
+import { useAuthStore } from "@/lib/auth/session-store";
 import { formatDate, formatRating, formatTimeRange } from "@/lib/format";
 
 import { DoctorAvatar } from "./doctor-avatar";
 
 type DoctorDetailPageProps = {
   doctorId: string;
+  patient?: boolean;
 };
 
-export function DoctorDetailPage({ doctorId }: DoctorDetailPageProps) {
+export function DoctorDetailPage({
+  doctorId,
+  patient = false,
+}: DoctorDetailPageProps) {
+  const Shell = patient ? PatientShell : PublicShell;
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const user = useAuthStore((state) => state.user);
   const doctorQuery = useQuery({
     enabled: Boolean(doctorId),
     queryFn: () => getDoctor(doctorId),
@@ -52,6 +61,9 @@ export function DoctorDetailPage({ doctorId }: DoctorDetailPageProps) {
   const doctor = doctorQuery.data;
   const bookingPath = `/patient/book/${doctorId}`;
   const loginPath = `/auth/patient?next=${encodeURIComponent(bookingPath)}`;
+  const canBook = !user || user.role === "PATIENT";
+  const bookingHref =
+    accessToken && user?.role === "PATIENT" ? bookingPath : loginPath;
   const specialties =
     doctor?.specialties?.map((specialty) => specialty.name).filter(Boolean) ??
     [];
@@ -67,13 +79,13 @@ export function DoctorDetailPage({ doctorId }: DoctorDetailPageProps) {
   const reviews = reviewsQuery.data?.items ?? doctor?.reviews ?? [];
 
   return (
-    <PublicShell>
+    <Shell title="Thông tin bác sĩ">
       <main className="bg-slate-50/70">
         <section className="border-b border-blue-100 bg-white py-8">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <Link
               className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
-              href="/doctors"
+              href={patient ? "/patient/doctors" : "/doctors"}
             >
               <ArrowLeft aria-hidden="true" className="size-4" />
               Quay lại danh sách bác sĩ
@@ -171,21 +183,22 @@ export function DoctorDetailPage({ doctorId }: DoctorDetailPageProps) {
                   Lịch trống 7 ngày
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Chọn khung giờ ở phase đặt lịch. Hiện tại nút đặt lịch sẽ đưa
-                  bệnh nhân đến đăng nhập trước.
+                  Chọn khung giờ phù hợp để tiếp tục đặt lịch tư vấn.
                 </p>
 
-                <Link
-                  className={buttonVariants({
-                    className: "mt-5 w-full",
-                    size: "lg",
-                    variant: "success",
-                  })}
-                  href={loginPath}
-                >
-                  <CalendarPlus aria-hidden="true" className="size-5" />
-                  Đặt lịch hẹn
-                </Link>
+                {canBook && (
+                  <Link
+                    className={buttonVariants({
+                      className: "mt-5 w-full",
+                      size: "lg",
+                      variant: "success",
+                    })}
+                    href={bookingHref}
+                  >
+                    <CalendarPlus aria-hidden="true" className="size-5" />
+                    Đặt lịch hẹn
+                  </Link>
+                )}
 
                 <div className="mt-5 space-y-4">
                   {scheduleQuery.isLoading ? (
@@ -298,6 +311,6 @@ export function DoctorDetailPage({ doctorId }: DoctorDetailPageProps) {
           )}
         </section>
       </main>
-    </PublicShell>
+    </Shell>
   );
 }
