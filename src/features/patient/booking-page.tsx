@@ -14,6 +14,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import DatePicker from "react-datepicker";
+import { format, parseISO } from "date-fns";
+import { vi } from "date-fns/locale";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -25,7 +28,7 @@ import { DoctorAvatar } from "@/features/doctors/doctor-avatar";
 import { getDoctor, getDoctorSchedule } from "@/lib/api/public";
 import { createAppointment } from "@/lib/api/patient";
 import { useAuthStore } from "@/lib/auth/session-store";
-import { formatDate, formatTimeRange } from "@/lib/format";
+import { formatDate, formatTime, formatTimeRange } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { DoctorAvailabilitySlot } from "@/types/api";
 
@@ -81,16 +84,35 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
     );
   }, [days, selectedDate]);
 
+  const availableSlots = activeDay?.slots ?? [];
+  const currentSlot = availableSlots.find(
+    (slot) => slot.startAt === selectedSlot?.startAt,
+  );
+  const slotGroups = [
+    {
+      label: "Buổi sáng",
+      slots: availableSlots.filter(
+        (slot) => Number(formatTime(slot.startAt).slice(0, 2)) < 12,
+      ),
+    },
+    {
+      label: "Buổi chiều",
+      slots: availableSlots.filter(
+        (slot) => Number(formatTime(slot.startAt).slice(0, 2)) >= 12,
+      ),
+    },
+  ];
+
   const createMutation = useMutation({
     mutationFn: (values: BookingForm) => {
-      if (!selectedSlot) {
+      if (!currentSlot) {
         throw new Error("NO_SLOT");
       }
 
       return createAppointment(
         {
           doctorId,
-          startAt: selectedSlot.startAt,
+          startAt: currentSlot.startAt,
           visitReason: values.visitReason,
         },
         auth,
@@ -112,7 +134,7 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
   }
 
   function submit(values: BookingForm) {
-    if (!selectedSlot) {
+    if (!currentSlot) {
       toast.error("Vui lòng chọn khung giờ khám.");
       return;
     }
@@ -137,18 +159,18 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
         </Link>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-        <aside className="rounded-lg border border-blue-100 bg-white p-5 shadow-sm">
+      <div className="space-y-6">
+        <aside className="flex flex-wrap items-center gap-5 border-b border-blue-100 pb-5">
           {doctorQuery.isLoading ? (
             <LoadingBlock label="Đang tải bác sĩ..." />
           ) : doctorQuery.isError || !doctor ? (
             <ErrorState message="Không tải được thông tin bác sĩ." />
           ) : (
             <>
-              <div className="aspect-[4/3] overflow-hidden rounded-lg border border-blue-100 bg-blue-50">
+              <div className="size-24 shrink-0 overflow-hidden rounded-lg border border-blue-100 bg-blue-50">
                 <DoctorAvatar alt={doctor.fullName} src={doctor.avatarUrl} />
               </div>
-              <div className="mt-5">
+              <div className="min-w-0 flex-1">
                 <span className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-primary">
                   <Stethoscope aria-hidden="true" className="size-3.5" />
                   {specialties}
@@ -163,13 +185,13 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
             </>
           )}
 
-          <div className="mt-5 rounded-lg border border-amber-100 bg-amber-50 p-4 text-sm leading-6 text-amber-800">
+          <div className="w-full border-l-4 border-amber-300 bg-amber-50 p-3 text-sm leading-6 text-amber-800">
             Sau khi gửi yêu cầu, hệ thống giữ slot 15 phút ở trạng thái chờ bác
             sĩ xác nhận.
           </div>
         </aside>
 
-        <section className="rounded-lg border border-blue-100 bg-white p-5 shadow-sm">
+        <section className="min-w-0 bg-white py-5">
           <div className="flex items-center gap-3">
             <span className="flex size-11 items-center justify-center rounded-lg bg-blue-50 text-primary">
               <CalendarDays aria-hidden="true" className="size-5" />
@@ -190,62 +212,86 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
             ) : scheduleQuery.isError ? (
               <ErrorState message="Chưa tải được lịch trống của bác sĩ." />
             ) : days.length ? (
-              <>
-                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                  {days.map((day) => (
-                    <button
-                      className={cn(
-                        "rounded-lg border p-3 text-left transition",
-                        (activeDay?.date ?? selectedDate) === day.date
-                          ? "border-primary bg-blue-50 text-primary"
-                          : "border-blue-100 bg-white text-slate-700 hover:border-primary/50",
-                      )}
-                      key={day.date}
-                      onClick={() => selectDate(day.date)}
-                      type="button"
-                    >
-                      <span className="block font-bold">
-                        {formatDate(`${day.date}T00:00:00+07:00`)}
-                      </span>
-                      <span className="mt-1 block text-sm text-muted-foreground">
-                        {day.slots.length} slot trống
-                      </span>
-                    </button>
-                  ))}
+              <div className="grid items-start gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+                <div className="booking-calendar min-w-0">
+                  <h2 className="mb-3 text-lg font-bold text-slate-900">
+                    Chọn ngày khám
+                  </h2>
+                  <DatePicker
+                    inline
+                    locale={vi}
+                    selected={activeDay ? parseISO(activeDay.date) : null}
+                    onChange={(date: Date | null) => {
+                      if (date) selectDate(format(date, "yyyy-MM-dd"));
+                    }}
+                    includeDates={days
+                      .filter((day) => day.slots.length > 0)
+                      .map((day) => parseISO(day.date))}
+                    minDate={parseISO(days[0].date)}
+                    maxDate={parseISO(days[days.length - 1].date)}
+                    calendarClassName="vi-calendar"
+                    previousMonthAriaLabel="Tháng trước"
+                    nextMonthAriaLabel="Tháng sau"
+                  />
                 </div>
 
-                <div className="mt-6 border-t border-blue-100 pt-5">
+                <div className="min-w-0">
                   <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
                     <Clock aria-hidden="true" className="size-5 text-primary" />
-                    Khung giờ
+                    Khung giờ{" "}
+                    {activeDay
+                      ? formatDate(`${activeDay.date}T00:00:00+07:00`)
+                      : ""}
                   </h2>
-                  {activeDay?.slots.length ? (
-                    <div className="mt-4 grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                      {activeDay.slots.map((slot) => (
-                        <button
-                          className={cn(
-                            "rounded-lg border px-3 py-2.5 text-sm font-bold transition",
-                            selectedSlot?.startAt === slot.startAt
-                              ? "border-green-600 bg-green-50 text-green-700"
-                              : "border-blue-100 bg-white text-slate-700 hover:border-primary hover:text-primary",
-                          )}
-                          key={slot.startAt}
-                          onClick={() => setSelectedSlot(slot)}
-                          type="button"
-                        >
-                          {formatTimeRange(slot.startAt, slot.endAt)}
-                        </button>
-                      ))}
+                  {slotGroups.map((group) => (
+                    <div className="mt-4" key={group.label}>
+                      <h3 className="mb-2 text-sm font-semibold text-slate-700">
+                        {group.label}
+                      </h3>
+                      {group.slots.length ? (
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+                          {group.slots.map((slot) => (
+                            <button
+                              className={cn(
+                                "min-h-11 rounded border px-2 py-2 text-sm font-semibold transition",
+                                currentSlot?.startAt === slot.startAt
+                                  ? "border-green-600 bg-green-600 text-white"
+                                  : "border-blue-100 bg-white text-slate-700 hover:border-primary hover:text-primary",
+                              )}
+                              aria-pressed={
+                                currentSlot?.startAt === slot.startAt
+                              }
+                              key={slot.startAt}
+                              onClick={() => setSelectedSlot(slot)}
+                              type="button"
+                            >
+                              {formatTimeRange(slot.startAt, slot.endAt)}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="py-3 text-sm text-muted-foreground">
+                          Không còn khung giờ trống.
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <EmptyState
-                      className="mt-4"
-                      description="Ngày này hiện không còn khung giờ trống."
-                      title="Không có slot"
-                    />
-                  )}
+                  ))}
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className={cn(
+                      "mt-5 rounded px-4 py-3 text-center text-sm font-semibold",
+                      currentSlot
+                        ? "bg-green-100 text-green-800"
+                        : "bg-amber-50 text-amber-800",
+                    )}
+                  >
+                    {currentSlot
+                      ? `Quý khách đang đặt hẹn vào lúc ${formatTimeRange(currentSlot.startAt, currentSlot.endAt)} ngày ${formatDate(currentSlot.startAt)}`
+                      : "Vui lòng chọn giờ khám."}
+                  </div>
                 </div>
-              </>
+              </div>
             ) : (
               <EmptyState
                 description="Bác sĩ hiện chưa có lịch trống trong 7 ngày tới."
@@ -273,16 +319,16 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
               <div className="text-sm">
                 <p className="font-bold text-slate-900">Tóm tắt lịch hẹn</p>
                 <p className="mt-1 text-muted-foreground">
-                  {selectedSlot
-                    ? `${formatDate(selectedSlot.startAt)}, ${formatTimeRange(
-                        selectedSlot.startAt,
-                        selectedSlot.endAt,
+                  {currentSlot
+                    ? `${formatDate(currentSlot.startAt)}, ${formatTimeRange(
+                        currentSlot.startAt,
+                        currentSlot.endAt,
                       )}`
                     : "Chưa chọn khung giờ"}
                 </p>
               </div>
               <Button
-                disabled={!selectedSlot || createMutation.isPending}
+                disabled={!currentSlot || createMutation.isPending}
                 type="submit"
                 variant="success"
               >

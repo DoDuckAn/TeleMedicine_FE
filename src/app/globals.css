@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+.booking-calendar .react-datepicker,
+.booking-calendar .react-datepicker__month-container {
+  width: 100%;
+}
+.booking-calendar .react-datepicker__week,
+.booking-calendar .react-datepicker__day-names {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.booking-calendar .react-datepicker__day,
+.booking-calendar .react-datepicker__day-name {
+  width: auto;
+  min-width: 0;
+  margin: 2px;
+  line-height: 2.25rem;
+}
+.booking-calendar .react-datepicker__day--selected {
+  background: #16a34a !important;
+}
+
 .date-picker-field {
   width: 100%;
 }
