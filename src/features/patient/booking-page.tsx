@@ -1,17 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
-  CalendarDays,
   Clock,
   Loader2,
   ShieldCheck,
-  Stethoscope,
+  CircleCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import DatePicker from "react-datepicker";
@@ -21,10 +19,10 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { PatientShell } from "@/components/patient/patient-shell";
-import { Button } from "@/components/ui/button";
+import { BookingProgress } from "@/components/patient/booking-progress";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
 import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/feedback";
-import { DoctorAvatar } from "@/features/doctors/doctor-avatar";
 import { getDoctor, getDoctorSchedule } from "@/lib/api/public";
 import { createAppointment } from "@/lib/api/patient";
 import { useAuthStore } from "@/lib/auth/session-store";
@@ -42,7 +40,7 @@ const bookingSchema = z.object({
 type BookingForm = z.infer<typeof bookingSchema>;
 
 export function BookingPage({ doctorId }: { doctorId: string }) {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
   const auth = { accessToken: accessToken ?? "" };
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -121,10 +119,17 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
     onError: (error) => {
       console.error(error);
       toast.error("Không đặt được lịch. Slot có thể đã được người khác chọn.");
+      setSelectedSlot(null);
+      void scheduleQuery.refetch();
     },
-    onSuccess: (appointment) => {
+    onSuccess: () => {
       toast.success("Đã gửi yêu cầu đặt lịch. Vui lòng chờ bác sĩ xác nhận.");
-      router.push(`/patient/appointments/${appointment.id}`);
+      void queryClient.invalidateQueries({
+        queryKey: ["public", "doctor", doctorId, "schedule"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["patient", "appointments"],
+      });
     },
   });
 
@@ -134,6 +139,7 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
   }
 
   function submit(values: BookingForm) {
+    if (createMutation.isPending || createMutation.isSuccess) return;
     if (!currentSlot) {
       toast.error("Vui lòng chọn khung giờ khám.");
       return;
@@ -147,11 +153,94 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
     doctor?.specialties?.map((specialty) => specialty.name).join(", ") ??
     "Bác sĩ chuyên khoa";
 
+  if (createMutation.isSuccess) {
+    const appointment = createMutation.data;
+    return (
+      <PatientShell title="Đặt lịch hẹn">
+        <BookingProgress step={3} />
+        <div className="mb-5">
+          <Link
+            href="/patient/doctors"
+            className={buttonVariants({
+              variant: "outline",
+              className: "bg-white shadow-sm",
+            })}
+          >
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            Quay về tìm bác sĩ
+          </Link>
+        </div>
+        <section className="mx-auto max-w-2xl border-t-4 border-green-600 bg-white px-5 py-8 shadow-sm sm:px-10">
+          <p className="mb-6 text-center text-xs font-bold uppercase text-slate-500">
+            Phiếu xác nhận yêu cầu đặt lịch
+          </p>
+          <CircleCheck
+            aria-hidden="true"
+            className="mx-auto size-14 text-green-600"
+          />
+          <h1
+            className="mt-5 text-center text-2xl font-bold text-slate-900"
+            tabIndex={-1}
+            ref={(node) => node?.focus()}
+          >
+            Đặt lịch thành công
+          </h1>
+          <p className="mt-3 text-center text-slate-600" role="status">
+            Yêu cầu đã được gửi. Vui lòng chờ bác sĩ xác nhận lịch hẹn.
+          </p>
+          <dl className="mt-8 divide-y divide-slate-200 border-y border-slate-200">
+            {[
+              ["Mã lịch hẹn", appointment.id],
+              ["Bác sĩ", doctor?.fullName ?? "Bác sĩ đã chọn"],
+              ["Chuyên khoa", specialties],
+              ["Ngày khám", formatDate(appointment.startAt)],
+              [
+                "Giờ khám",
+                formatTimeRange(appointment.startAt, appointment.endAt),
+              ],
+              ["Trạng thái", "Chờ bác sĩ xác nhận"],
+              ["Lý do khám", appointment.visitReason],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="grid gap-1 py-3 sm:grid-cols-[140px_1fr]"
+              >
+                <dt className="text-sm text-slate-500">{label}</dt>
+                <dd className="break-words font-medium text-slate-900">
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <Link
+              href={`/patient/appointments/${appointment.id}`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Xem lịch hẹn
+            </Link>
+            <Link
+              href="/patient/doctors"
+              className={buttonVariants({ variant: "success" })}
+            >
+              <CircleCheck className="size-4" />
+              Hoàn tất
+            </Link>
+          </div>
+        </section>
+      </PatientShell>
+    );
+  }
+
   return (
     <PatientShell title="Đặt lịch khám">
+      <BookingProgress step={2} />
       <div className="mb-5">
         <Link
-          className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
+          className={buttonVariants({
+            variant: "outline",
+            className: "bg-white shadow-sm",
+          })}
           href="/patient/doctors"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
@@ -160,53 +249,22 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
       </div>
 
       <div className="space-y-6">
-        <aside className="flex flex-wrap items-center gap-5 border-b border-blue-100 pb-5">
-          {doctorQuery.isLoading ? (
-            <LoadingBlock label="Đang tải bác sĩ..." />
-          ) : doctorQuery.isError || !doctor ? (
-            <ErrorState message="Không tải được thông tin bác sĩ." />
-          ) : (
-            <>
-              <div className="size-24 shrink-0 overflow-hidden rounded-lg border border-blue-100 bg-blue-50">
-                <DoctorAvatar alt={doctor.fullName} src={doctor.avatarUrl} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-primary">
-                  <Stethoscope aria-hidden="true" className="size-3.5" />
-                  {specialties}
-                </span>
-                <h2 className="mt-3 text-2xl font-bold text-slate-900">
-                  {doctor.fullName}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {doctor.bio ?? "Thông tin giới thiệu đang được cập nhật."}
-                </p>
-              </div>
-            </>
-          )}
+        <header className="border-b border-slate-200 bg-white px-5 py-7 text-center sm:px-8">
+          <h1 className="text-2xl font-bold text-slate-900">
+            Chọn lịch khám phù hợp
+          </h1>
+          <p className="mx-auto mt-3 max-w-2xl leading-7 text-slate-600">
+            Chọn ngày khám, khung giờ còn trống và nhập lý do khám trước khi xác
+            nhận đặt lịch.
+          </p>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-amber-800">
+            Sau khi gửi yêu cầu, hệ thống giữ khung giờ trong 15 phút để chờ bác
+            sĩ xác nhận. Lịch hẹn chỉ được xác nhận sau khi bác sĩ đồng ý.
+          </p>
+        </header>
 
-          <div className="w-full border-l-4 border-amber-300 bg-amber-50 p-3 text-sm leading-6 text-amber-800">
-            Sau khi gửi yêu cầu, hệ thống giữ slot 15 phút ở trạng thái chờ bác
-            sĩ xác nhận.
-          </div>
-        </aside>
-
-        <section className="min-w-0 bg-white py-5">
-          <div className="flex items-center gap-3">
-            <span className="flex size-11 items-center justify-center rounded-lg bg-blue-50 text-primary">
-              <CalendarDays aria-hidden="true" className="size-5" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold uppercase text-primary">
-                Chọn thời gian
-              </p>
-              <h1 className="text-2xl font-bold text-slate-900">
-                Lịch trống trong 7 ngày tới
-              </h1>
-            </div>
-          </div>
-
-          <div className="mt-6">
+        <section className="min-w-0 bg-white px-4 py-6 sm:px-8 lg:px-10">
+          <div>
             {scheduleQuery.isLoading ? (
               <LoadingBlock label="Đang tải lịch trống..." />
             ) : scheduleQuery.isError ? (
@@ -219,6 +277,7 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
                   </h2>
                   <DatePicker
                     inline
+                    disabled={createMutation.isPending}
                     locale={vi}
                     selected={activeDay ? parseISO(activeDay.date) : null}
                     onChange={(date: Date | null) => {
@@ -243,39 +302,42 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
                       ? formatDate(`${activeDay.date}T00:00:00+07:00`)
                       : ""}
                   </h2>
-                  {slotGroups.map((group) => (
-                    <div className="mt-4" key={group.label}>
-                      <h3 className="mb-2 text-sm font-semibold text-slate-700">
-                        {group.label}
-                      </h3>
-                      {group.slots.length ? (
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
-                          {group.slots.map((slot) => (
-                            <button
-                              className={cn(
-                                "min-h-11 rounded border px-2 py-2 text-sm font-semibold transition",
-                                currentSlot?.startAt === slot.startAt
-                                  ? "border-green-600 bg-green-600 text-white"
-                                  : "border-blue-100 bg-white text-slate-700 hover:border-primary hover:text-primary",
-                              )}
-                              aria-pressed={
-                                currentSlot?.startAt === slot.startAt
-                              }
-                              key={slot.startAt}
-                              onClick={() => setSelectedSlot(slot)}
-                              type="button"
-                            >
-                              {formatTimeRange(slot.startAt, slot.endAt)}
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="py-3 text-sm text-muted-foreground">
-                          Không còn khung giờ trống.
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                  <div className="max-h-80 overflow-y-auto pr-2">
+                    {slotGroups.map((group) => (
+                      <div className="mt-4" key={group.label}>
+                        <h3 className="mb-2 text-sm font-semibold text-slate-700">
+                          {group.label}
+                        </h3>
+                        {group.slots.length ? (
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+                            {group.slots.map((slot) => (
+                              <button
+                                className={cn(
+                                  "min-h-11 rounded border px-2 py-2 text-sm font-semibold transition",
+                                  currentSlot?.startAt === slot.startAt
+                                    ? "border-green-600 bg-green-600 text-white"
+                                    : "border-slate-300 bg-slate-100 text-slate-700 hover:border-slate-500 hover:bg-slate-200",
+                                )}
+                                aria-pressed={
+                                  currentSlot?.startAt === slot.startAt
+                                }
+                                key={slot.startAt}
+                                disabled={createMutation.isPending}
+                                onClick={() => setSelectedSlot(slot)}
+                                type="button"
+                              >
+                                {formatTimeRange(slot.startAt, slot.endAt)}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="py-3 text-sm text-muted-foreground">
+                            Không còn khung giờ trống.
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                   <div
                     role="status"
                     aria-live="polite"
@@ -310,6 +372,7 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
               label="Lý do khám"
             >
               <Textarea
+                disabled={createMutation.isPending}
                 placeholder="Mô tả triệu chứng, thời gian xuất hiện, thuốc đang dùng..."
                 {...form.register("visitReason")}
               />
@@ -337,7 +400,9 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
                 ) : (
                   <ShieldCheck aria-hidden="true" className="size-4" />
                 )}
-                Xác nhận đặt lịch
+                {createMutation.isPending
+                  ? "Đang đặt lịch..."
+                  : "Xác nhận đặt lịch"}
               </Button>
             </div>
           </form>

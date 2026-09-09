@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { PatientShell } from "@/components/patient/patient-shell";
+import { BookingProgress } from "@/components/patient/booking-progress";
 import { PublicShell } from "@/components/public/public-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
@@ -55,7 +56,8 @@ export function DoctorsListPage({ patient = false }: { patient?: boolean }) {
   const doctors = doctorsQuery.data?.items ?? [];
 
   return (
-    <Shell title="Tìm bác sĩ">
+    <Shell title={patient ? "Đặt lịch hẹn" : "Tìm bác sĩ"}>
+      {patient && <BookingProgress step={1} />}
       <main className="bg-slate-50/70">
         <section className="border-b border-blue-100 bg-white py-10">
           <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">

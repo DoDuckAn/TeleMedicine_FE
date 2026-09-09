@@ -74,7 +74,7 @@ export function AvailabilityView({ days }: { days: DoctorAvailabilityDay[] }) {
                   {group.slots.map((slot) => (
                     <span
                       key={slot.startAt}
-                      className="flex min-h-11 items-center justify-center rounded border border-green-200 bg-green-50 px-2 py-2 text-center text-sm font-semibold text-green-800"
+                      className="flex min-h-11 items-center justify-center rounded border border-slate-300 bg-slate-100 px-2 py-2 text-center text-sm font-semibold text-slate-700"
                     >
                       {formatTimeRange(slot.startAt, slot.endAt)}
                     </span>

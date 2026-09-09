@@ -2,11 +2,11 @@
 
 import {
   Bell,
+  Calendar,
   CalendarClock,
   ClipboardList,
   Home,
   LogOut,
-  Search,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -21,7 +21,7 @@ import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
 
 const navItems = [
   { href: "/patient/dashboard", icon: Home, label: "Tổng quan" },
-  { href: "/patient/doctors", icon: Search, label: "Đặt lịch hẹn" },
+  { href: "/patient/doctors", icon: Calendar, label: "Đặt lịch hẹn" },
   { href: "/patient/appointments", icon: CalendarClock, label: "Lịch hẹn" },
   { href: "/patient/history", icon: ClipboardList, label: "Lịch sử khám" },
   { href: "/notifications", icon: Bell, label: "Thông báo" },
@@ -107,7 +107,7 @@ export function PatientShell({
                 className={buttonVariants({ size: "sm", variant: "success" })}
                 href="/patient/doctors"
               >
-                <Search aria-hidden="true" className="size-4" />
+                <Calendar aria-hidden="true" className="size-4" />
                 Đặt lịch hẹn
               </Link>
               <button
