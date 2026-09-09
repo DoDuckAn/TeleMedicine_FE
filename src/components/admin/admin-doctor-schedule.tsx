@@ -6,7 +6,8 @@ import { CalendarDays, CalendarOff } from "lucide-react";
 import { getAdminDoctorOverrides } from "@/lib/api/admin";
 import { getDoctorSchedule } from "@/lib/api/public";
 import { useAuthStore } from "@/lib/auth/session-store";
-import { formatDate, formatDateTime, formatTimeRange } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
+import { AvailabilityView } from "@/components/doctor/availability-view";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { ErrorState, LoadingBlock } from "@/components/ui/feedback";
@@ -147,30 +148,7 @@ export function AdminDoctorSchedule({
       ) : available.isError ? (
         <ErrorState message="Không tải được lịch có thể đặt." />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {available.data?.days.map((day) => (
-            <div key={day.date} className="border-t border-blue-100 pt-3">
-              <h3 className="mb-3 font-semibold">
-                {formatDate(day.date + "T00:00:00+07:00")}
-              </h3>
-              <div className="grid grid-cols-2 gap-2">
-                {day.slots.map((slot) => (
-                  <span
-                    key={slot.startAt}
-                    className="border border-green-200 bg-green-50 p-2 text-center text-xs text-green-800"
-                  >
-                    {formatTimeRange(slot.startAt, slot.endAt)}
-                  </span>
-                ))}
-              </div>
-              {!day.slots.length && (
-                <p className="text-sm text-slate-500">
-                  Không còn khung giờ trống.
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+        <AvailabilityView key={doctorId} days={available.data?.days ?? []} />
       )}
     </section>
   );

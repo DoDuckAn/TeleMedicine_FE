@@ -10,12 +10,16 @@ import {
   MessageSquareText,
   Star,
   Stethoscope,
+  X,
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 import { PatientShell } from "@/components/patient/patient-shell";
 import { PublicShell } from "@/components/public/public-shell";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { AvailabilityView } from "@/components/doctor/availability-view";
 import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/feedback";
 import {
   getDoctor,
@@ -24,7 +28,7 @@ import {
 } from "@/lib/api/public";
 import { getDoctorReviewReply } from "@/lib/doctor-reviews";
 import { useAuthStore } from "@/lib/auth/session-store";
-import { formatDate, formatRating, formatTimeRange } from "@/lib/format";
+import { formatRating } from "@/lib/format";
 
 import { DoctorAvatar } from "./doctor-avatar";
 
@@ -38,6 +42,7 @@ export function DoctorDetailPage({
   patient = false,
 }: DoctorDetailPageProps) {
   const Shell = patient ? PatientShell : PublicShell;
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const accessToken = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
   const doctorQuery = useQuery({
@@ -47,7 +52,7 @@ export function DoctorDetailPage({
   });
 
   const scheduleQuery = useQuery({
-    enabled: Boolean(doctorId),
+    enabled: Boolean(doctorId) && scheduleOpen,
     queryFn: () => getDoctorSchedule(doctorId),
     queryKey: ["public", "doctor", doctorId, "schedule"],
   });
@@ -200,49 +205,14 @@ export function DoctorDetailPage({
                   </Link>
                 )}
 
-                <div className="mt-5 space-y-4">
-                  {scheduleQuery.isLoading ? (
-                    <LoadingBlock
-                      className="min-h-32"
-                      label="Đang tải lịch..."
-                    />
-                  ) : scheduleQuery.isError ? (
-                    <ErrorState message="Chưa tải được lịch trống của bác sĩ." />
-                  ) : scheduleQuery.data?.days.length ? (
-                    scheduleQuery.data.days.map((day) => (
-                      <div
-                        className="border-t border-blue-100 pt-4"
-                        key={day.date}
-                      >
-                        <p className="font-semibold text-slate-900">
-                          {formatDate(`${day.date}T00:00:00+07:00`)}
-                        </p>
-                        {day.slots.length ? (
-                          <div className="mt-3 grid grid-cols-2 gap-2">
-                            {day.slots.slice(0, 6).map((slot) => (
-                              <span
-                                className="rounded-md border border-blue-100 bg-blue-50 px-2 py-1.5 text-center text-xs font-semibold text-primary"
-                                key={slot.startAt}
-                              >
-                                {formatTimeRange(slot.startAt, slot.endAt)}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            Không còn slot trống.
-                          </p>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <EmptyState
-                      className="p-5"
-                      description="Bác sĩ hiện chưa có slot trống trong 7 ngày tới."
-                      title="Chưa có lịch trống"
-                    />
-                  )}
-                </div>
+                <Button
+                  className="mt-3 w-full"
+                  variant="outline"
+                  onClick={() => setScheduleOpen(true)}
+                >
+                  <CalendarDays className="size-4" aria-hidden="true" />
+                  Xem lịch trống
+                </Button>
               </aside>
 
               <div className="rounded-lg border border-blue-100 bg-white p-5 shadow-sm lg:col-span-2">
@@ -311,6 +281,59 @@ export function DoctorDetailPage({
           )}
         </section>
       </main>
+      {scheduleOpen && (
+        <Modal
+          label="Lịch trống của bác sĩ"
+          onClose={() => setScheduleOpen(false)}
+        >
+          <section
+            className="w-full max-w-4xl rounded-lg bg-white p-5 sm:p-6"
+            onKeyDownCapture={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                setScheduleOpen(false);
+              }
+            }}
+          >
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="text-xl font-bold">
+                Lịch trống 7 ngày - {doctor?.fullName}
+              </h2>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label="Đóng lịch"
+                title="Đóng lịch"
+                onClick={() => setScheduleOpen(false)}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+            {scheduleQuery.isLoading ? (
+              <LoadingBlock label="Đang tải lịch..." />
+            ) : scheduleQuery.isError ? (
+              <ErrorState message="Chưa tải được lịch trống của bác sĩ." />
+            ) : (
+              <AvailabilityView
+                key={doctorId}
+                days={scheduleQuery.data?.days ?? []}
+              />
+            )}
+            {canBook && (
+              <div className="mt-5 flex justify-end border-t border-blue-100 pt-4">
+                <Link
+                  href={bookingHref}
+                  className={buttonVariants({ variant: "success" })}
+                >
+                  <CalendarPlus className="size-4" />
+                  Đặt lịch hẹn
+                </Link>
+              </div>
+            )}
+          </section>
+        </Modal>
+      )}
     </Shell>
   );
 }
