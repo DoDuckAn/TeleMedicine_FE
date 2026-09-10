@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Bell,
   BarChart3,
   CalendarClock,
   ClipboardList,
@@ -13,6 +14,9 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getDoctorPendingAppointments, getDoctorHistoryAppointments } from "@/lib/api/doctor";
+import { NavCount, NotificationNavCount } from "@/components/nav-count";
 
 import { BrandMark } from "@/components/brand-mark";
 import { buttonVariants } from "@/components/ui/button";
@@ -21,6 +25,7 @@ import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
 import { cn } from "@/lib/utils";
 
 const activeNavItems = [
+  { href: "/doctor/notifications", icon: Bell, label: "Thông báo" },
   { href: "/doctor/dashboard", icon: Home, label: "Tổng quan" },
   { href: "/doctor/requests", icon: ClipboardList, label: "Yêu cầu khám" },
   { href: "/doctor/appointments", icon: CalendarClock, label: "Lịch tư vấn" },
@@ -42,6 +47,24 @@ export function DoctorShell({
   const accessToken = useAuthStore((state) => state.accessToken);
   const clearSession = useAuthStore((state) => state.clearSession);
   const user = useAuthStore((state) => state.user);
+  const auth={accessToken:accessToken??""};
+  const enabled=Boolean(accessToken)&&user?.role==="DOCTOR";
+  const pendingQuery=useQuery({
+    queryKey:["doctor","appointments","nav-pending",user?.id],
+    queryFn:()=>getDoctorPendingAppointments({limit:1,page:1},auth),
+    enabled,
+    refetchInterval:60_000,
+  });
+  const futureQuery=useQuery({
+    queryKey:["doctor","appointments","nav-future",user?.id],
+    queryFn:()=>getDoctorHistoryAppointments({limit:1,page:1,status:"CONFIRMED",from:new Date().toISOString()},auth),
+    enabled,
+    refetchInterval:60_000,
+  });
+  const counts:Record<string,number|undefined>={
+    "/doctor/requests":pendingQuery.data?.pagination.total,
+    "/doctor/appointments":futureQuery.data?.pagination.total,
+  };
 
   useEffect(() => {
     if (!accessToken || !user) {
@@ -70,7 +93,7 @@ export function DoctorShell({
           <BrandMark />
         </Link>
 
-        <DoctorNav pathname={pathname} />
+        <DoctorNav counts={counts} pathname={pathname} />
       </aside>
 
       <div className="lg:pl-72">
@@ -97,7 +120,7 @@ export function DoctorShell({
 
         <div className="border-b border-blue-100 bg-white lg:hidden">
           <div className="overflow-x-auto px-4 py-3">
-            <DoctorNav mobile pathname={pathname} />
+            <DoctorNav counts={counts} mobile pathname={pathname} />
           </div>
         </div>
 
@@ -108,9 +131,11 @@ export function DoctorShell({
 }
 
 function DoctorNav({
+  counts,
   mobile = false,
   pathname,
 }: {
+  counts:Record<string,number|undefined>;
   mobile?: boolean;
   pathname: string;
 }) {
@@ -135,6 +160,7 @@ function DoctorNav({
           >
             <Icon aria-hidden="true" className="size-4" />
             {item.label}
+            {item.href==="/doctor/notifications"?<NotificationNavCount/>:<NavCount count={counts[item.href]} label={item.href==="/doctor/requests"?"yêu cầu chờ xác nhận":"lịch đã xác nhận trong tương lai"}/>}
           </Link>
         );
       })}

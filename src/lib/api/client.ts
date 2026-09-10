@@ -37,7 +37,7 @@ export type ApiRequestOptions = Omit<RequestInit, "headers"> & {
   params?: Record<string, QueryValue>;
 };
 
-const API_BASE_URL =
+export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api/v1";
 
 function buildUrl(path: string, params?: Record<string, QueryValue>) {
@@ -113,7 +113,7 @@ export async function apiFetch<T>(
 
 let refreshPromise: Promise<string | null> | null = null;
 
-async function refreshAccessToken() {
+export async function refreshAccessToken() {
   if (refreshPromise) return refreshPromise;
   const session = useAuthStore.getState();
   if (!session.refreshToken || !session.user) {

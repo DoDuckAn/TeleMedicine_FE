@@ -14,6 +14,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { BrandMark } from "@/components/brand-mark";
+import { NotificationNavCount } from "@/components/nav-count";
 import { buttonVariants } from "@/components/ui/button";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { cn } from "@/lib/utils";
@@ -87,6 +88,7 @@ export function PatientShell({
               >
                 <Icon aria-hidden="true" className="size-4" />
                 {item.label}
+                {item.href==="/notifications"?<NotificationNavCount/>:null}
               </Link>
             );
           })}

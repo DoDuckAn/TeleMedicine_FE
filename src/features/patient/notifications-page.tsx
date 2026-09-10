@@ -18,6 +18,8 @@ import { toast } from "sonner";
 
 import { StatusBadge } from "@/components/appointment/status-badge";
 import { PatientShell } from "@/components/patient/patient-shell";
+import { DoctorShell } from "@/components/doctor/doctor-shell";
+import { getDoctorMe } from "@/lib/api/doctor";
 import { Modal } from "@/components/ui/modal";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/feedback";
@@ -53,6 +55,9 @@ export function NotificationsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
+  const role=useAuthStore((state)=>state.user?.role);
+  const isDoctor=role==="DOCTOR";
+  const Shell=isDoctor?DoctorShell:PatientShell;
   const auth = { accessToken: accessToken ?? "" };
   const enabled = Boolean(accessToken);
   const [page, setPage] = useState(1);
@@ -61,8 +66,8 @@ export function NotificationsPage() {
 
   const patientQuery = useQuery({
     enabled,
-    queryFn: () => getPatientMe(auth),
-    queryKey: ["patient", "me"],
+    queryFn: async () => isDoctor?await getDoctorMe(auth):await getPatientMe(auth),
+    queryKey: [isDoctor?"doctor":"patient", "me"],
   });
 
   const notificationsQuery = useQuery({
@@ -124,7 +129,7 @@ export function NotificationsPage() {
   const preferences = preferencesQuery.data;
 
   return (
-    <PatientShell title="Thông báo">
+    <Shell title="Thông báo">
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="grid gap-5">
           <div className="rounded-lg border border-blue-100 bg-white p-5 shadow-sm">
@@ -204,7 +209,7 @@ export function NotificationsPage() {
                             size: "sm",
                             variant: "outline",
                           })}
-                          href={`/patient/appointments/${notification.appointment.id}`}
+                          href={`/${isDoctor?"doctor":"patient"}/appointments/${notification.appointment.id}`}
                         >
                           <StatusBadge
                             status={notification.appointment.status}
@@ -268,7 +273,7 @@ export function NotificationsPage() {
             Cài đặt thông báo
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Email chỉ bật được khi hồ sơ bệnh nhân đã có email hợp lệ.
+            Email chỉ bật được khi hồ sơ đã có email hợp lệ.
           </p>
 
           {preferencesQuery.isLoading ? (
@@ -378,7 +383,7 @@ export function NotificationsPage() {
               <Button
                 onClick={() => {
                   setShowEmailRequiredModal(false);
-                  router.push("/patient/profile");
+                  router.push(isDoctor?"/doctor/profile":"/patient/profile");
                 }}
                 variant="primary"
               >
@@ -388,7 +393,7 @@ export function NotificationsPage() {
           </section>
         </Modal>
       ) : null}
-    </PatientShell>
+    </Shell>
   );
 }
 

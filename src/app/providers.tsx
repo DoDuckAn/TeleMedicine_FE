@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/auth/session-store";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { Toaster } from "sonner";
+import { RealtimeProvider } from "@/components/realtime-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const hydrated = useAuthStore((state) => state.hydrated);
@@ -31,8 +32,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      {hydrated && <RealtimeProvider />}
       {hydrated ? children : <LoadingBlock className="min-h-screen" />}
-      <Toaster richColors position="top-right" />
+      <Toaster
+        richColors
+        closeButton
+        toastOptions={{ closeButtonAriaLabel: "Đóng thông báo" }}
+        position="top-right"
+      />
     </QueryClientProvider>
   );
 }
