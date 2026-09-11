@@ -45,6 +45,33 @@ export type SystemScheduleSettings = {
   workdayStartTime: string;
 };
 
+export type IntegrationSecretKey =
+  | "CLOUDINARY_CLOUD_NAME"
+  | "CLOUDINARY_API_KEY"
+  | "CLOUDINARY_API_SECRET"
+  | "FIREBASE_PROJECT_ID"
+  | "FIREBASE_CLIENT_EMAIL"
+  | "FIREBASE_PRIVATE_KEY"
+  | "GOOGLE_CLIENT_ID"
+  | "GOOGLE_CLIENT_SECRET"
+  | "GOOGLE_REFRESH_TOKEN"
+  | "SMTP_HOST"
+  | "SMTP_PORT"
+  | "SMTP_SECURE"
+  | "SMTP_USER"
+  | "SMTP_PASSWORD"
+  | "EMAIL_FROM";
+
+export type IntegrationSettingStatus = {
+  configured: boolean;
+  environmentConfigured: boolean;
+  source: "DATABASE" | "ENVIRONMENT" | "NONE";
+};
+
+export type AdminSystemSettings = SystemScheduleSettings & {
+  integrations: Record<IntegrationSecretKey, IntegrationSettingStatus>;
+};
+
 export type Pagination = {
   page: number;
   limit: number;
