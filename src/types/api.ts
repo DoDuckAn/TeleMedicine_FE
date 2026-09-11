@@ -37,6 +37,14 @@ export type WeeklyScheduleRange = {
 
 export type WeeklySchedule = Record<Weekday, WeeklyScheduleRange[]>;
 
+export type SystemScheduleSettings = {
+  slotDurationMinutes: number;
+  timezone: string;
+  version: number;
+  workdayEndTime: string;
+  workdayStartTime: string;
+};
+
 export type Pagination = {
   page: number;
   limit: number;

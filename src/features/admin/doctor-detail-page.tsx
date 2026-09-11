@@ -35,6 +35,7 @@ import {
   updateAdminDoctor,
   updateAdminDoctorStatus,
 } from "@/lib/api/admin";
+import { getScheduleSettings } from "@/lib/api/settings";
 import {
   createEmptyWeeklySchedule,
   parseMultiline,
@@ -96,6 +97,10 @@ export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
     enabled: Boolean(accessToken),
     queryFn: () => listAdminSpecialties(auth),
     queryKey: ["admin", "specialties"],
+  });
+  const settingsQuery = useQuery({
+    queryFn: getScheduleSettings,
+    queryKey: ["system", "schedule-settings"],
   });
 
   const statisticsQuery = useQuery({
@@ -200,7 +205,13 @@ export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
   function submit(values: DoctorFormOutput) {
     const scheduleError = validateWeeklySchedule(
       normalizeWeeklySchedule(weeklySchedule),
-      30,
+      settingsQuery.data?.slotDurationMinutes ?? 30,
+      settingsQuery.data
+        ? {
+            endTime: settingsQuery.data.workdayEndTime,
+            startTime: settingsQuery.data.workdayStartTime,
+          }
+        : undefined,
     );
 
     if (scheduleError) {
@@ -408,6 +419,8 @@ export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
                 <AdminWeeklyScheduleEditor
                   onChange={setScheduleDraft}
                   schedule={weeklySchedule}
+                  workdayEndTime={settingsQuery.data?.workdayEndTime}
+                  workdayStartTime={settingsQuery.data?.workdayStartTime}
                 />
               </div>
             </section>

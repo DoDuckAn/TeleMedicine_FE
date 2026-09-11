@@ -29,6 +29,7 @@ import {
   restoreDoctorScheduleOverrides,
   updateDoctorWeeklySchedule,
 } from "@/lib/api/doctor";
+import { getScheduleSettings } from "@/lib/api/settings";
 import {
   addDaysToDateOnly,
   calendarSlotMeta,
@@ -40,6 +41,7 @@ import {
   getWeekStartFromDateOnly,
   nextDefaultRange,
   normalizeWeeklySchedule,
+  toMinutes,
   toVietnamOffsetIso,
   validateWeeklySchedule,
   weekdayLabels,
@@ -89,6 +91,10 @@ export function DoctorSchedulePage() {
     queryFn: () => getDoctorWeeklySchedule(auth),
     queryKey: ["doctor", "schedule", "weekly"],
   });
+  const settingsQuery = useQuery({
+    queryFn: getScheduleSettings,
+    queryKey: ["system", "schedule-settings"],
+  });
 
   const calendarQuery = useQuery({
     enabled,
@@ -110,6 +116,10 @@ export function DoctorSchedulePage() {
   });
 
   const slotDuration = weeklyQuery.data?.slotDurationMinutes ?? 30;
+  const workday = {
+    endTime: settingsQuery.data?.workdayEndTime ?? "17:00",
+    startTime: settingsQuery.data?.workdayStartTime ?? "08:00",
+  };
   const serverSchedule = useMemo(
     () =>
       cloneWeeklySchedule(
@@ -201,7 +211,7 @@ export function DoctorSchedulePage() {
 
   function saveWeeklySchedule() {
     const normalized = normalizeWeeklySchedule(schedule);
-    const error = validateWeeklySchedule(normalized, slotDuration);
+    const error = validateWeeklySchedule(normalized, slotDuration, workday);
 
     if (error) {
       toast.error(error);
@@ -220,6 +230,23 @@ export function DoctorSchedulePage() {
     if (overrideForm.type === "UNAVAILABLE" && !overrideForm.reason.trim()) {
       toast.error("Nhập lý do nghỉ đột xuất.");
       return;
+    }
+
+    if (overrideForm.type === "AVAILABLE") {
+      const sameDay =
+        overrideForm.startAt.slice(0, 10) === overrideForm.endAt.slice(0, 10);
+      const start = toMinutes(overrideForm.startAt.slice(11, 16));
+      const end = toMinutes(overrideForm.endAt.slice(11, 16));
+      if (
+        !sameDay ||
+        start < toMinutes(workday.startTime) ||
+        end > toMinutes(workday.endTime)
+      ) {
+        toast.error(
+          `Lịch bù phải nằm trong giờ làm việc ${workday.startTime} - ${workday.endTime}.`,
+        );
+        return;
+      }
     }
 
     createOverrideMutation.mutate(overrideForm);
@@ -258,7 +285,7 @@ export function DoctorSchedulePage() {
 
       return {
         ...base,
-        [weekday]: [...base[weekday], nextDefaultRange(base[weekday])],
+        [weekday]: [...base[weekday], nextDefaultRange(base[weekday], workday)],
       };
     });
   }
@@ -362,6 +389,7 @@ export function DoctorSchedulePage() {
                       }
                       ranges={schedule[weekday]}
                       weekday={weekday}
+                      workday={workday}
                     />
                   ))}
                 </div>
@@ -398,6 +426,18 @@ export function DoctorSchedulePage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Bắt đầu">
                     <Input
+                      max={
+                        overrideForm.type === "AVAILABLE" &&
+                        overrideForm.startAt
+                          ? `${overrideForm.startAt.slice(0, 10)}T${workday.endTime}`
+                          : undefined
+                      }
+                      min={
+                        overrideForm.type === "AVAILABLE" &&
+                        overrideForm.startAt
+                          ? `${overrideForm.startAt.slice(0, 10)}T${workday.startTime}`
+                          : undefined
+                      }
                       onDateChange={(dateValue) =>
                         setOverrideForm((current) => ({
                           ...current,
@@ -410,6 +450,16 @@ export function DoctorSchedulePage() {
                   </Field>
                   <Field label="Kết thúc">
                     <Input
+                      max={
+                        overrideForm.type === "AVAILABLE" && overrideForm.endAt
+                          ? `${overrideForm.endAt.slice(0, 10)}T${workday.endTime}`
+                          : undefined
+                      }
+                      min={
+                        overrideForm.type === "AVAILABLE" && overrideForm.endAt
+                          ? `${overrideForm.endAt.slice(0, 10)}T${workday.startTime}`
+                          : undefined
+                      }
                       onDateChange={(dateValue) =>
                         setOverrideForm((current) => ({
                           ...current,
@@ -536,6 +586,7 @@ function WeeklyDayEditor({
   onUpdate,
   ranges,
   weekday,
+  workday,
 }: {
   onAdd: () => void;
   onRemove: (index: number) => void;
@@ -546,6 +597,7 @@ function WeeklyDayEditor({
   ) => void;
   ranges: WeeklyScheduleRange[];
   weekday: Weekday;
+  workday: { endTime: string; startTime: string };
 }) {
   return (
     <div className="rounded-lg border border-blue-100 bg-slate-50 p-4">
@@ -571,6 +623,8 @@ function WeeklyDayEditor({
             >
               <Field label="Bắt đầu">
                 <Input
+                  max={workday.endTime}
+                  min={workday.startTime}
                   onChange={(event) =>
                     onUpdate(index, "startTime", event.target.value)
                   }
@@ -580,6 +634,8 @@ function WeeklyDayEditor({
               </Field>
               <Field label="Kết thúc">
                 <Input
+                  max={workday.endTime}
+                  min={workday.startTime}
                   onChange={(event) =>
                     onUpdate(index, "endTime", event.target.value)
                   }

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { ErrorState, LoadingBlock } from "@/components/ui/feedback";
 import { createAdminDoctor, listAdminSpecialties } from "@/lib/api/admin";
+import { getScheduleSettings } from "@/lib/api/settings";
 import { createEmptyWeeklySchedule, parseMultiline } from "@/lib/admin-format";
 import { useAuthStore } from "@/lib/auth/session-store";
 import {
@@ -56,6 +57,10 @@ export function AdminDoctorNewPage() {
     enabled: Boolean(accessToken),
     queryFn: () => listAdminSpecialties(auth),
     queryKey: ["admin", "specialties"],
+  });
+  const settingsQuery = useQuery({
+    queryFn: getScheduleSettings,
+    queryKey: ["system", "schedule-settings"],
   });
 
   const form = useForm<DoctorFormInput, unknown, DoctorFormOutput>({
@@ -121,7 +126,13 @@ export function AdminDoctorNewPage() {
   function submit(values: DoctorFormOutput) {
     const scheduleError = validateWeeklySchedule(
       normalizeWeeklySchedule(weeklySchedule),
-      30,
+      settingsQuery.data?.slotDurationMinutes ?? 30,
+      settingsQuery.data
+        ? {
+            endTime: settingsQuery.data.workdayEndTime,
+            startTime: settingsQuery.data.workdayStartTime,
+          }
+        : undefined,
     );
 
     if (scheduleError) {
@@ -284,6 +295,8 @@ export function AdminDoctorNewPage() {
             <AdminWeeklyScheduleEditor
               onChange={setWeeklySchedule}
               schedule={weeklySchedule}
+              workdayEndTime={settingsQuery.data?.workdayEndTime}
+              workdayStartTime={settingsQuery.data?.workdayStartTime}
             />
           </div>
         </section>

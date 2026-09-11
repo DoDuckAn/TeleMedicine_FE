@@ -13,9 +13,13 @@ import type { Weekday, WeeklySchedule, WeeklyScheduleRange } from "@/types/api";
 export function AdminWeeklyScheduleEditor({
   onChange,
   schedule,
+  workdayEndTime = "17:00",
+  workdayStartTime = "08:00",
 }: {
   onChange: (schedule: WeeklySchedule) => void;
   schedule: WeeklySchedule;
+  workdayEndTime?: string;
+  workdayStartTime?: string;
 }) {
   function updateRange(
     weekday: Weekday,
@@ -32,7 +36,13 @@ export function AdminWeeklyScheduleEditor({
 
   function addRange(weekday: Weekday) {
     const next = cloneWeeklySchedule(schedule);
-    next[weekday] = [...next[weekday], nextDefaultRange(next[weekday])];
+    next[weekday] = [
+      ...next[weekday],
+      nextDefaultRange(next[weekday], {
+        endTime: workdayEndTime,
+        startTime: workdayStartTime,
+      }),
+    ];
     onChange(next);
   }
 
@@ -81,6 +91,8 @@ export function AdminWeeklyScheduleEditor({
                 >
                   <Field label="Bắt đầu">
                     <Input
+                      max={workdayEndTime}
+                      min={workdayStartTime}
                       onChange={(event) =>
                         updateRange(
                           weekday,
@@ -95,6 +107,8 @@ export function AdminWeeklyScheduleEditor({
                   </Field>
                   <Field label="Kết thúc">
                     <Input
+                      max={workdayEndTime}
+                      min={workdayStartTime}
                       onChange={(event) =>
                         updateRange(
                           weekday,

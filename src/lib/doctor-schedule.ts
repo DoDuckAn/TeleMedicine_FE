@@ -80,6 +80,7 @@ export function normalizeWeeklySchedule(
 export function validateWeeklySchedule(
   schedule: WeeklySchedule,
   slotDurationMinutes: number,
+  workday?: { endTime: string; startTime: string },
 ) {
   for (const weekday of weekdays) {
     const ranges = schedule[weekday];
@@ -99,6 +100,14 @@ export function validateWeeklySchedule(
 
       if (end <= start) {
         return `${weekdayLabels[weekday]} có giờ kết thúc không lớn hơn giờ bắt đầu.`;
+      }
+
+      if (
+        workday &&
+        (start < toMinutes(workday.startTime) ||
+          end > toMinutes(workday.endTime))
+      ) {
+        return `${weekdayLabels[weekday]} phải nằm trong giờ làm việc ${workday.startTime} - ${workday.endTime}.`;
       }
 
       if (
@@ -174,10 +183,15 @@ export function dateOnlyEndIso(dateOnly: string) {
   return `${addDaysToDateOnly(dateOnly, 1)}T00:00:00${VI_TIMEZONE_OFFSET}`;
 }
 
-export function nextDefaultRange(ranges: WeeklyScheduleRange[]) {
-  const latest = ranges.at(-1)?.endTime ?? "08:00";
-  const startMinutes = Math.min(toMinutes(latest), 22 * 60);
-  const endMinutes = Math.min(startMinutes + 60, 23 * 60);
+export function nextDefaultRange(
+  ranges: WeeklyScheduleRange[],
+  workday = { endTime: "17:00", startTime: "08:00" },
+) {
+  const latest = ranges.at(-1)?.endTime ?? workday.startTime;
+  const latestStart = Math.max(toMinutes(latest), toMinutes(workday.startTime));
+  const endLimit = toMinutes(workday.endTime);
+  const startMinutes = Math.min(latestStart, endLimit - 30);
+  const endMinutes = Math.min(startMinutes + 60, endLimit);
 
   return {
     endTime: minutesToTime(endMinutes),
