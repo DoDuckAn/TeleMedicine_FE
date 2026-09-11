@@ -1,39 +1,20 @@
 "use client";
 
-import {
-  Bell,
-  BarChart3,
-  CalendarClock,
-  ClipboardList,
-  Home,
-  LogOut,
-  MessageSquareText,
-  Settings,
-  UserRound,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getDoctorPendingAppointments, getDoctorHistoryAppointments } from "@/lib/api/doctor";
-import { NavCount, NotificationNavCount } from "@/components/nav-count";
+import {
+  getDoctorPendingAppointments,
+  getDoctorHistoryAppointments,
+} from "@/lib/api/doctor";
+import { RoleMenuNav, useRoleMenu } from "@/components/role-menu";
 
 import { BrandMark } from "@/components/brand-mark";
 import { buttonVariants } from "@/components/ui/button";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
-import { cn } from "@/lib/utils";
-
-const activeNavItems = [
-  { href: "/doctor/notifications", icon: Bell, label: "Thông báo" },
-  { href: "/doctor/dashboard", icon: Home, label: "Tổng quan" },
-  { href: "/doctor/requests", icon: ClipboardList, label: "Yêu cầu khám" },
-  { href: "/doctor/appointments", icon: CalendarClock, label: "Lịch tư vấn" },
-  { href: "/doctor/schedule", icon: Settings, label: "Lịch làm việc" },
-  { href: "/doctor/reviews", icon: MessageSquareText, label: "Đánh giá" },
-  { href: "/doctor/statistics", icon: BarChart3, label: "Thống kê" },
-  { href: "/doctor/profile", icon: UserRound, label: "Hồ sơ" },
-];
 
 export function DoctorShell({
   children,
@@ -47,23 +28,33 @@ export function DoctorShell({
   const accessToken = useAuthStore((state) => state.accessToken);
   const clearSession = useAuthStore((state) => state.clearSession);
   const user = useAuthStore((state) => state.user);
-  const auth={accessToken:accessToken??""};
-  const enabled=Boolean(accessToken)&&user?.role==="DOCTOR";
-  const pendingQuery=useQuery({
-    queryKey:["doctor","appointments","nav-pending",user?.id],
-    queryFn:()=>getDoctorPendingAppointments({limit:1,page:1},auth),
+  const auth = { accessToken: accessToken ?? "" };
+  const enabled = Boolean(accessToken) && user?.role === "DOCTOR";
+  const menuQuery = useRoleMenu(accessToken ?? "", user?.role);
+  const pendingQuery = useQuery({
+    queryKey: ["doctor", "appointments", "nav-pending", user?.id],
+    queryFn: () => getDoctorPendingAppointments({ limit: 1, page: 1 }, auth),
     enabled,
-    refetchInterval:60_000,
+    refetchInterval: 60_000,
   });
-  const futureQuery=useQuery({
-    queryKey:["doctor","appointments","nav-future",user?.id],
-    queryFn:()=>getDoctorHistoryAppointments({limit:1,page:1,status:"CONFIRMED",from:new Date().toISOString()},auth),
+  const futureQuery = useQuery({
+    queryKey: ["doctor", "appointments", "nav-future", user?.id],
+    queryFn: () =>
+      getDoctorHistoryAppointments(
+        {
+          limit: 1,
+          page: 1,
+          status: "CONFIRMED",
+          from: new Date().toISOString(),
+        },
+        auth,
+      ),
     enabled,
-    refetchInterval:60_000,
+    refetchInterval: 60_000,
   });
-  const counts:Record<string,number|undefined>={
-    "/doctor/requests":pendingQuery.data?.pagination.total,
-    "/doctor/appointments":futureQuery.data?.pagination.total,
+  const counts: Record<string, number | undefined> = {
+    PENDING_REQUESTS: pendingQuery.data?.pagination.total,
+    UPCOMING_APPOINTMENTS: futureQuery.data?.pagination.total,
   };
 
   useEffect(() => {
@@ -93,7 +84,11 @@ export function DoctorShell({
           <BrandMark />
         </Link>
 
-        <DoctorNav counts={counts} pathname={pathname} />
+        <RoleMenuNav
+          counts={counts}
+          items={menuQuery.data?.items ?? []}
+          pathname={pathname}
+        />
       </aside>
 
       <div className="lg:pl-72">
@@ -120,50 +115,17 @@ export function DoctorShell({
 
         <div className="border-b border-blue-100 bg-white lg:hidden">
           <div className="overflow-x-auto px-4 py-3">
-            <DoctorNav counts={counts} mobile pathname={pathname} />
+            <RoleMenuNav
+              counts={counts}
+              items={menuQuery.data?.items ?? []}
+              mobile
+              pathname={pathname}
+            />
           </div>
         </div>
 
         <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
-  );
-}
-
-function DoctorNav({
-  counts,
-  mobile = false,
-  pathname,
-}: {
-  counts:Record<string,number|undefined>;
-  mobile?: boolean;
-  pathname: string;
-}) {
-  return (
-    <nav className={mobile ? "flex min-w-max gap-2" : "mt-8 space-y-1"}>
-      {activeNavItems.map((item) => {
-        const Icon = item.icon;
-        const active =
-          pathname === item.href || pathname.startsWith(`${item.href}/`);
-
-        return (
-          <Link
-            className={cn(
-              "flex items-center gap-3 rounded-lg text-sm font-semibold transition",
-              mobile ? "px-3 py-2" : "px-3 py-2.5",
-              active
-                ? "bg-blue-50 text-primary"
-                : "text-slate-600 hover:bg-slate-100 hover:text-primary",
-            )}
-            href={item.href}
-            key={item.href}
-          >
-            <Icon aria-hidden="true" className="size-4" />
-            {item.label}
-            {item.href==="/doctor/notifications"?<NotificationNavCount/>:<NavCount count={counts[item.href]} label={item.href==="/doctor/requests"?"yêu cầu chờ xác nhận":"lịch đã xác nhận trong tương lai"}/>}
-          </Link>
-        );
-      })}
-    </nav>
   );
 }

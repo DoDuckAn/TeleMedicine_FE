@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  CalendarClock,
-  LayoutDashboard,
-  LogOut,
-  MessageSquareText,
-  Stethoscope,
-  Tags,
-  UsersRound,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -17,16 +9,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { buttonVariants } from "@/components/ui/button";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
-import { cn } from "@/lib/utils";
-
-const navItems = [
-  { href: "/admin/dashboard", icon: LayoutDashboard, label: "Tổng quan" },
-  { href: "/admin/doctors", icon: Stethoscope, label: "Bác sĩ" },
-  { href: "/admin/patients", icon: UsersRound, label: "Bệnh nhân" },
-  { href: "/admin/specialties", icon: Tags, label: "Chuyên khoa" },
-  { href: "/admin/appointments", icon: CalendarClock, label: "Lịch hẹn" },
-  { href: "/admin/reviews", icon: MessageSquareText, label: "Đánh giá" },
-];
+import { RoleMenuNav, useRoleMenu } from "@/components/role-menu";
 
 export function AdminShell({
   children,
@@ -40,6 +23,7 @@ export function AdminShell({
   const accessToken = useAuthStore((state) => state.accessToken);
   const clearSession = useAuthStore((state) => state.clearSession);
   const user = useAuthStore((state) => state.user);
+  const menuQuery = useRoleMenu(accessToken ?? "", user?.role);
 
   useEffect(() => {
     if (!accessToken || !user) {
@@ -68,7 +52,7 @@ export function AdminShell({
           <BrandMark />
         </Link>
 
-        <AdminNav pathname={pathname} />
+        <RoleMenuNav items={menuQuery.data?.items ?? []} pathname={pathname} />
       </aside>
 
       <div className="lg:pl-72">
@@ -95,47 +79,16 @@ export function AdminShell({
 
         <div className="border-b border-blue-100 bg-white lg:hidden">
           <div className="overflow-x-auto px-4 py-3">
-            <AdminNav mobile pathname={pathname} />
+            <RoleMenuNav
+              items={menuQuery.data?.items ?? []}
+              mobile
+              pathname={pathname}
+            />
           </div>
         </div>
 
         <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
-  );
-}
-
-function AdminNav({
-  mobile = false,
-  pathname,
-}: {
-  mobile?: boolean;
-  pathname: string;
-}) {
-  return (
-    <nav className={mobile ? "flex min-w-max gap-2" : "mt-8 space-y-1"}>
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const active =
-          pathname === item.href || pathname.startsWith(`${item.href}/`);
-
-        return (
-          <Link
-            className={cn(
-              "flex items-center gap-3 rounded-lg text-sm font-semibold transition",
-              mobile ? "px-3 py-2" : "px-3 py-2.5",
-              active
-                ? "bg-blue-50 text-primary"
-                : "text-slate-600 hover:bg-slate-100 hover:text-primary",
-            )}
-            href={item.href}
-            key={item.href}
-          >
-            <Icon aria-hidden="true" className="size-4" />
-            {item.label}
-          </Link>
-        );
-      })}
-    </nav>
   );
 }

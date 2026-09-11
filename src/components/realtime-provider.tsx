@@ -51,7 +51,7 @@ export function RealtimeProvider() {
     const sync = () => {
       appointmentsChanged();
       notificationsChanged();
-      if(role!=="PATIENT") enqueue(["public", "doctor"]);
+      if (role !== "PATIENT") enqueue(["public", "doctor"]);
     };
     const retry = () => {
       if (disposed || retryTimer) return;
@@ -79,6 +79,7 @@ export function RealtimeProvider() {
     socket.on("connect", sync);
     socket.on("appointments.changed", appointmentsChanged);
     socket.on("notifications.changed", notificationsChanged);
+    socket.on("menus.changed", () => enqueue(["menus"], ["admin", "menus"]));
     socket.on("schedule.changed", (data: { doctorId?: string }) => {
       if (typeof data?.doctorId !== "string") return;
       if (role === "PATIENT") return;
