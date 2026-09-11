@@ -307,7 +307,7 @@ export function AdminSpecialtiesPage() {
             })
           ) : (
             <EmptyState
-              description="Tạo chuyên khoa đầu tiên để admin có thể gán bác sĩ."
+              description="Chưa có chuyên khoa để hiển thị."
               title="Chưa có chuyên khoa"
             />
           )}

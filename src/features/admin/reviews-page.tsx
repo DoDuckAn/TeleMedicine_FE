@@ -171,7 +171,7 @@ export function AdminReviewsPage() {
                 setDoctorId(event.target.value);
                 setPage(1);
               }}
-              placeholder="Doctor ID..."
+              placeholder="Mã bác sĩ..."
               value={doctorId}
             />
             <Input
@@ -179,7 +179,7 @@ export function AdminReviewsPage() {
                 setPatientId(event.target.value);
                 setPage(1);
               }}
-              placeholder="Patient ID..."
+              placeholder="Mã bệnh nhân..."
               value={patientId}
             />
             <Select

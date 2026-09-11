@@ -67,10 +67,6 @@ export function DoctorsListPage({ patient = false }: { patient?: boolean }) {
             <h1 className="mt-2 text-4xl font-bold text-slate-900">
               Tìm bác sĩ phù hợp
             </h1>
-            <p className="mx-auto mt-3 max-w-2xl leading-7 text-muted-foreground">
-              Lọc theo chuyên khoa, sắp xếp theo tên hoặc đánh giá và đặt lịch ở
-              khung giờ bác sĩ còn trống.
-            </p>
           </div>
         </section>
 
@@ -151,7 +147,7 @@ export function DoctorsListPage({ patient = false }: { patient?: boolean }) {
             {doctorsQuery.isLoading ? (
               <LoadingBlock label="Đang tải danh sách bác sĩ..." />
             ) : doctorsQuery.isError ? (
-              <ErrorState message="Chưa tải được danh sách bác sĩ. Kiểm tra backend API rồi thử lại." />
+              <ErrorState message="Chưa tải được danh sách bác sĩ. Vui lòng thử lại." />
             ) : doctors.length ? (
               doctors.map((doctor) => (
                 <DoctorCard doctor={doctor} key={doctor.userID} />

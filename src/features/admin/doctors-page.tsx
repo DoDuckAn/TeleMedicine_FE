@@ -203,7 +203,7 @@ export function AdminDoctorsPage() {
                     <th className="px-4 py-3">Bác sĩ</th>
                     <th className="px-4 py-3">Chuyên khoa</th>
                     <th className="px-4 py-3">Trạng thái</th>
-                    <th className="px-4 py-3">Lịch / Review</th>
+                    <th className="px-4 py-3">Lịch hẹn / Đánh giá</th>
                     <th className="px-4 py-3">Đăng nhập</th>
                     <th className="px-4 py-3 text-right">Thao tác</th>
                   </tr>
@@ -246,7 +246,7 @@ export function AdminDoctorsPage() {
                       </td>
                       <td className="px-4 py-4 text-slate-700">
                         {doctor._count?.appointments ?? 0} lịch ·{" "}
-                        {doctor._count?.reviews ?? 0} review
+                        {doctor._count?.reviews ?? 0} đánh giá
                       </td>
                       <td className="px-4 py-4 text-muted-foreground">
                         {doctor.user.lastLoginAt

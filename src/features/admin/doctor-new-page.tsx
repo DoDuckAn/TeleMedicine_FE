@@ -278,7 +278,7 @@ export function AdminDoctorNewPage() {
             Lịch tuần mặc định
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Các khung giờ phải chia theo slot 30 phút.
+            Các khung giờ được chia theo từng khoảng 30 phút.
           </p>
           <div className="mt-5">
             <AdminWeeklyScheduleEditor

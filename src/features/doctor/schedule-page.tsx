@@ -292,10 +292,6 @@ export function DoctorSchedulePage() {
               <h1 className="mt-1 text-3xl font-bold text-slate-900">
                 Lịch làm việc và thay đổi đột xuất
               </h1>
-              <p className="mt-2 max-w-3xl leading-7 text-muted-foreground">
-                Cấu hình lịch tuần làm nền cho đặt khám, thêm khoảng nghỉ hoặc
-                bù lịch để backend tính slot chính xác cho bệnh nhân.
-              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -332,7 +328,7 @@ export function DoctorSchedulePage() {
                   Lịch tuần mặc định
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Slot hiện tại: {slotDuration} phút.
+                  Mỗi khung giờ: {slotDuration} phút.
                 </p>
               </div>
               <Button
@@ -394,7 +390,9 @@ export function DoctorSchedulePage() {
                     value={overrideForm.type}
                   >
                     <option value="UNAVAILABLE">Nghỉ đột xuất</option>
-                    <option value="AVAILABLE">Bù lịch / mở thêm slot</option>
+                    <option value="AVAILABLE">
+                      Bù lịch / mở thêm khung giờ
+                    </option>
                   </Select>
                 </Field>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -696,7 +694,7 @@ function CalendarPanel({
                     })
                   ) : (
                     <p className="rounded-md border border-dashed border-border bg-white px-3 py-4 text-center text-xs font-semibold text-muted-foreground">
-                      Không có slot
+                      Không có khung giờ
                     </p>
                   )}
                 </div>
@@ -705,8 +703,8 @@ function CalendarPanel({
           </div>
         ) : (
           <EmptyState
-            description="Lịch tuần sẽ hiển thị sau khi backend trả dữ liệu calendar."
-            title="Chưa có dữ liệu calendar"
+            description="Chưa có lịch làm việc trong tuần này."
+            title="Chưa có lịch làm việc"
           />
         )}
       </div>

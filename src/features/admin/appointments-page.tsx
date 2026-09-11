@@ -96,7 +96,7 @@ export function AdminAppointmentsPage() {
                   setDoctorId(event.target.value);
                   setPage(1);
                 }}
-                placeholder="Doctor ID..."
+                placeholder="Mã bác sĩ..."
                 value={doctorId}
               />
             </div>
@@ -105,7 +105,7 @@ export function AdminAppointmentsPage() {
                 setPatientId(event.target.value);
                 setPage(1);
               }}
-              placeholder="Patient ID..."
+              placeholder="Mã bệnh nhân..."
               value={patientId}
             />
             <Select
@@ -405,7 +405,7 @@ function AppointmentDetailModal({
                 <Field label="Lý do hủy">
                   <Textarea
                     onChange={(event) => setReason(event.target.value)}
-                    placeholder="Nhập lý do admin hủy lịch..."
+                    placeholder="Nhập lý do quản trị viên hủy lịch..."
                     value={reason}
                   />
                 </Field>

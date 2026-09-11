@@ -150,7 +150,7 @@ export function AdminDashboardPage() {
         {dashboardQuery.isLoading ? (
           <LoadingBlock label="Đang tải dashboard..." />
         ) : dashboardQuery.isError ? (
-          <ErrorState message="Chưa tải được dashboard admin." />
+          <ErrorState message="Chưa tải được dashboard quản trị." />
         ) : (
           <>
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
@@ -172,12 +172,12 @@ export function AdminDashboardPage() {
               />
               <MetricCard
                 icon={UsersRound}
-                label="Bệnh nhân active"
+                label="Bệnh nhân đang hoạt động"
                 value={data?.system?.activePatients ?? 0}
               />
               <MetricCard
                 icon={Stethoscope}
-                label="Bác sĩ active"
+                label="Bác sĩ đang hoạt động"
                 value={data?.system?.activeDoctors ?? 0}
               />
               <MetricCard

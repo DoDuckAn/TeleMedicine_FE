@@ -118,7 +118,9 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
     },
     onError: (error) => {
       console.error(error);
-      toast.error("Không đặt được lịch. Slot có thể đã được người khác chọn.");
+      toast.error(
+        "Không đặt được lịch. Khung giờ có thể đã được người khác chọn.",
+      );
       setSelectedSlot(null);
       void scheduleQuery.refetch();
     },
@@ -356,7 +358,7 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
               </div>
             ) : (
               <EmptyState
-                description="Bác sĩ hiện chưa có lịch trống trong 7 ngày tới."
+                description="Bác sĩ hiện chưa có lịch trống."
                 title="Chưa có lịch trống"
               />
             )}

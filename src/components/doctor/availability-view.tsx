@@ -14,11 +14,7 @@ export function AvailabilityView({ days }: { days: DoctorAvailabilityDay[] }) {
     days.find((day) => day.slots.length > 0) ??
     days[0];
   if (!activeDay)
-    return (
-      <p className="py-4 text-sm text-slate-600">
-        Chưa có lịch trống trong 7 ngày tới.
-      </p>
-    );
+    return <p className="py-4 text-sm text-slate-600">Chưa có lịch trống.</p>;
   const groups = [
     {
       label: "Buổi sáng",

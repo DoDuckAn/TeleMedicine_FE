@@ -185,7 +185,7 @@ export function DoctorDetailPage({
                     aria-hidden="true"
                     className="size-5 text-primary"
                   />
-                  Lịch trống 7 ngày
+                  Xem lịch trống
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   Chọn khung giờ phù hợp để tiếp tục đặt lịch tư vấn.
@@ -298,7 +298,7 @@ export function DoctorDetailPage({
           >
             <div className="mb-5 flex items-center justify-between gap-4">
               <h2 className="text-xl font-bold">
-                Lịch trống 7 ngày - {doctor?.fullName}
+                Lịch trống - {doctor?.fullName}
               </h2>
               <Button
                 variant="outline"

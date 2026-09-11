@@ -231,10 +231,6 @@ export function AdminMenusPage() {
                 >
                   Thứ tự hiển thị
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Kéo thả các mục để đổi vị trí. Thay đổi chỉ được áp dụng khi
-                  lưu.
-                </p>
               </div>
               <div className="space-y-2">
                 {items.map((item, index) => (

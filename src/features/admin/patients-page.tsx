@@ -182,7 +182,7 @@ export function AdminPatientsPage() {
                     <th className="px-4 py-3">Liên hệ</th>
                     <th className="px-4 py-3">Giới tính</th>
                     <th className="px-4 py-3">Trạng thái</th>
-                    <th className="px-4 py-3">Lịch / Review</th>
+                    <th className="px-4 py-3">Lịch hẹn / Đánh giá</th>
                     <th className="px-4 py-3 text-right">Thao tác</th>
                   </tr>
                 </thead>
@@ -213,7 +213,7 @@ export function AdminPatientsPage() {
                       </td>
                       <td className="px-4 py-4 text-slate-700">
                         {patient._count?.appointments ?? 0} lịch ·{" "}
-                        {patient._count?.doctorReviews ?? 0} review
+                        {patient._count?.doctorReviews ?? 0} đánh giá
                       </td>
                       <td className="px-4 py-4">
                         <div className="flex justify-end gap-2">

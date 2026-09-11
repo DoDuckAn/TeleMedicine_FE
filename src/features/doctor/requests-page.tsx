@@ -75,10 +75,6 @@ export function DoctorRequestsPage() {
           <h1 className="mt-1 text-3xl font-bold text-slate-900">
             Yêu cầu đặt lịch của bệnh nhân
           </h1>
-          <p className="mt-2 leading-7 text-muted-foreground">
-            Xác nhận để backend tạo Google Meet, hoặc từ chối kèm lý do để mở
-            lại khung giờ.
-          </p>
         </div>
 
         {pendingQuery.isLoading ? (
@@ -145,7 +141,7 @@ export function DoctorRequestsPage() {
           ))
         ) : (
           <EmptyState
-            description="Các request còn trong thời hạn xác nhận sẽ xuất hiện tại đây."
+            description="Hiện không có yêu cầu nào cần xử lý."
             title="Không có yêu cầu đang chờ"
           />
         )}

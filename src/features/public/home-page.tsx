@@ -36,7 +36,7 @@ const featureCards = [
     title: "Lựa chọn bác sĩ",
   },
   {
-    description: "Đặt slot còn trống, hệ thống giữ lịch chờ bác sĩ xác nhận.",
+    description: "Chọn khung giờ phù hợp và gửi yêu cầu hẹn.",
     icon: CalendarCheck,
     title: "Đặt hẹn trực tuyến",
   },
@@ -49,7 +49,7 @@ const featureCards = [
 
 const stats = [
   { icon: ShieldCheck, label: "Bác sĩ được quản lý hồ sơ rõ ràng" },
-  { icon: CalendarPlus, label: "Đặt lịch theo slot còn trống từ hệ thống" },
+  { icon: CalendarPlus, label: "Chủ động chọn khung giờ còn trống" },
   { icon: Video, label: "Tư vấn qua Google Meet khi lịch được xác nhận" },
   { icon: UsersRound, label: "Hồ sơ bệnh nhân gửi trước cho bác sĩ" },
 ];
@@ -213,7 +213,7 @@ export function HomePage() {
               {specialtiesQuery.isLoading ? (
                 <LoadingBlock label="Đang tải chuyên khoa..." />
               ) : specialtiesQuery.isError ? (
-                <ErrorState message="Chưa tải được danh sách chuyên khoa. Kiểm tra backend API rồi thử lại." />
+                <ErrorState message="Chưa tải được danh sách chuyên khoa. Vui lòng thử lại." />
               ) : specialtiesQuery.data?.length ? (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {specialtiesQuery.data.slice(0, 6).map((specialty) => (
@@ -234,7 +234,7 @@ export function HomePage() {
                 </div>
               ) : (
                 <EmptyState
-                  description="Danh mục chuyên khoa hiện chưa có dữ liệu active."
+                  description="Hiện chưa có chuyên khoa để hiển thị."
                   title="Chưa có chuyên khoa"
                 />
               )}
@@ -269,7 +269,7 @@ export function HomePage() {
             ) : doctorsQuery.isError ? (
               <ErrorState
                 className="lg:col-span-3"
-                message="Chưa tải được danh sách bác sĩ. Kiểm tra backend API rồi thử lại."
+                message="Chưa tải được danh sách bác sĩ. Vui lòng thử lại."
               />
             ) : doctorsQuery.data?.items.length ? (
               doctorsQuery.data.items.map((doctor) => (
@@ -278,7 +278,7 @@ export function HomePage() {
             ) : (
               <EmptyState
                 className="lg:col-span-3"
-                description="Hiện chưa có bác sĩ active để hiển thị."
+                description="Hiện chưa có bác sĩ để hiển thị."
                 title="Chưa có bác sĩ"
               />
             )}
