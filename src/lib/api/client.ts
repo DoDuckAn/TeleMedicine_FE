@@ -15,6 +15,7 @@ export type ApiEnvelope<T> =
     };
 
 export class ApiError extends Error {
+  retryAfterMs?: number;
   code: string;
   status: number;
   details?: unknown;
@@ -71,7 +72,7 @@ export async function apiFetch<T>(
     requestHeaders.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  let response = await fetch(buildUrl(path, params), {
+  let response = await timedFetch(buildUrl(path, params), {
     ...init,
     body: requestBody,
     headers: requestHeaders,
@@ -86,7 +87,7 @@ export async function apiFetch<T>(
           : await refreshAccessToken();
       if (nextToken) {
         requestHeaders.set("Authorization", `Bearer ${nextToken}`);
-        response = await fetch(buildUrl(path, params), {
+        response = await timedFetch(buildUrl(path, params), {
           ...init,
           body: requestBody,
           headers: requestHeaders,
@@ -95,7 +96,7 @@ export async function apiFetch<T>(
     }
   }
 
-  const payload = (await response.json()) as ApiEnvelope<T>;
+  const payload = await readEnvelope<T>(response);
 
   if (!response.ok || !payload.success) {
     const error = payload.success
@@ -105,7 +106,9 @@ export async function apiFetch<T>(
         }
       : payload.error;
 
-    throw new ApiError(response.status, error);
+    const apiError = new ApiError(response.status, error);
+    apiError.retryAfterMs = retryAfterMs(response);
+    throw apiError;
   }
 
   return payload.data;
@@ -121,15 +124,15 @@ export async function refreshAccessToken() {
     return null;
   }
   refreshPromise = (async () => {
-    const response = await fetch(buildUrl("/auth/refresh"), {
+    const response = await timedFetch(buildUrl("/auth/refresh"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken: session.refreshToken }),
     });
-    const payload = (await response.json()) as ApiEnvelope<{
+    const payload = await readEnvelope<{
       accessToken: string;
       refreshToken: string;
-    }>;
+    }>(response);
     // Ignore refresh responses belonging to a session that has since logged out or changed.
     if (useAuthStore.getState().refreshToken !== session.refreshToken)
       return null;
@@ -155,3 +158,75 @@ export async function refreshAccessToken() {
   }
 }
 import { useAuthStore } from "@/lib/auth/session-store";
+
+function retryAfterMs(response: Response) {
+  const value = response.headers.get("Retry-After");
+  if (!value) return undefined;
+  const seconds = Number(value);
+  const delay = Number.isFinite(seconds)
+    ? seconds * 1000
+    : Date.parse(value) - Date.now();
+  return Number.isFinite(delay) ? Math.max(0, delay) : undefined;
+}
+
+async function timedFetch(url: URL, init: RequestInit) {
+  const timeout = AbortSignal.timeout(45_000);
+  const signal = init.signal
+    ? AbortSignal.any([init.signal, timeout])
+    : timeout;
+  try {
+    return await fetch(url, { ...init, signal });
+  } catch (error) {
+    if (init.signal?.aborted) throw error;
+    throw new ApiError(0, {
+      code: timeout.aborted ? "REQUEST_TIMEOUT" : "NETWORK_ERROR",
+      message: timeout.aborted
+        ? "Yêu cầu quá thời gian chờ."
+        : "Không kết nối được máy chủ.",
+    });
+  }
+}
+
+async function readEnvelope<T>(response: Response): Promise<ApiEnvelope<T>> {
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    /* Proxy responses may not be JSON. */
+  }
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "success" in payload &&
+    ((payload.success === true && "data" in payload) ||
+      (payload.success === false &&
+        "error" in payload &&
+        payload.error &&
+        typeof payload.error === "object" &&
+        "message" in payload.error &&
+        "code" in payload.error))
+  ) {
+    return payload as ApiEnvelope<T>;
+  }
+  const error = new ApiError(response.ok ? 502 : response.status, {
+    code: "INVALID_SERVER_RESPONSE",
+    message: "Máy chủ tạm thời không phản hồi hợp lệ.",
+  });
+  error.retryAfterMs = retryAfterMs(response);
+  throw error;
+}
+
+export function shouldRetryQuery(failureCount: number, error: Error) {
+  if (failureCount >= 2) return false;
+  if (!(error instanceof ApiError)) return false;
+  if (error.status === 429)
+    return error.retryAfterMs !== undefined && error.retryAfterMs <= 30_000;
+  return [0, 502, 503, 504].includes(error.status);
+}
+
+export function queryRetryDelay(attempt: number, error: Error) {
+  const delay = Math.min(1000 * 2 ** attempt, 10_000) + Math.random() * 300;
+  return error instanceof ApiError
+    ? Math.max(error.retryAfterMs ?? 0, delay)
+    : delay;
+}

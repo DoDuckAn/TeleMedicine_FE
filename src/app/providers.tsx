@@ -6,6 +6,7 @@ import { useAuthStore } from "@/lib/auth/session-store";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { Toaster } from "sonner";
 import { RealtimeProvider } from "@/components/realtime-provider";
+import { shouldRetryQuery, queryRetryDelay } from "@/lib/api/client";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const hydrated = useAuthStore((state) => state.hydrated);
@@ -13,7 +14,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     () =>
       new QueryClient({
         defaultOptions: {
+          mutations: { retry: false },
           queries: {
+            retry: shouldRetryQuery,
+            retryDelay: queryRetryDelay,
             staleTime: 30_000,
             refetchOnWindowFocus: false,
           },
