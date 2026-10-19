@@ -24,7 +24,7 @@ export function AppointmentCard({
     appointment.doctor?.specialties
       ?.map((specialty) => specialty.name)
       .filter(Boolean)
-      .join(", ") ?? "Chuyên khoa";
+      .join(", ") || "Chưa cập nhật chuyên khoa";
 
   return (
     <article className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
