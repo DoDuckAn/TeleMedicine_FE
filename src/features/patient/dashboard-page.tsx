@@ -65,10 +65,6 @@ export function PatientDashboardPage() {
               <h2 className="mt-1 text-3xl font-bold text-slate-900">
                 {profileQuery.data?.patientProfile.fullName ?? "Bệnh nhân"}
               </h2>
-              <p className="mt-2 max-w-2xl leading-7 text-muted-foreground">
-                Theo dõi lịch hẹn sắp tới, nhận thông báo xác nhận và đặt lịch
-                với bác sĩ chuyên khoa khi cần tư vấn.
-              </p>
             </div>
             <Link
               className={buttonVariants({ size: "lg", variant: "success" })}

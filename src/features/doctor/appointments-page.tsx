@@ -78,10 +78,6 @@ export function DoctorAppointmentsPage() {
               <h1 className="mt-1 text-3xl font-bold text-slate-900">
                 Lịch tư vấn của tôi
               </h1>
-              <p className="mt-2 leading-7 text-muted-foreground">
-                Theo dõi lịch đã xác nhận, vào phòng Meet và hoàn tất buổi khám
-                sau khi tư vấn.
-              </p>
             </div>
 
             <div className="grid grid-cols-2 rounded-lg bg-blue-50 p-1">

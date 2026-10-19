@@ -81,7 +81,7 @@ export function AdminAppointmentsPage() {
             Quản lý lịch khám
           </p>
           <h1 className="mt-1 text-3xl font-bold text-slate-900">
-            Toàn bộ appointment
+              Toàn bộ lịch hẹn
           </h1>
 
           <div className="mt-5 grid gap-3 border-t border-blue-100 pt-5 md:grid-cols-2 xl:grid-cols-6">
@@ -298,7 +298,7 @@ function AppointmentDetailModal({
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase text-primary">
-              Chi tiết appointment
+              Chi tiết lịch hẹn
             </p>
             <h2 className="mt-1 text-2xl font-bold text-slate-900">
               {appointmentId}

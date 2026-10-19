@@ -67,10 +67,6 @@ export function DoctorDashboardPage() {
               <h1 className="mt-1 text-3xl font-bold text-slate-900">
                 {meQuery.data?.doctorProfile.fullName ?? "Bác sĩ"}
               </h1>
-              <p className="mt-2 max-w-2xl leading-7 text-muted-foreground">
-                Xử lý yêu cầu đặt lịch, theo dõi lịch tư vấn sắp tới và hoàn tất
-                buổi khám sau khi tư vấn.
-              </p>
             </div>
             <Link
               className={buttonVariants({ size: "lg", variant: "success" })}

@@ -91,7 +91,7 @@ export function PatientAuthPage() {
     }
 
     if (!isFirebaseConfigured()) {
-      toast.error("Chưa cấu hình Firebase client trong .env.local.");
+      toast.error("Đăng nhập qua điện thoại tạm thời chưa khả dụng.");
       return;
     }
 
@@ -120,7 +120,7 @@ export function PatientAuthPage() {
       console.error(error);
       recaptchaVerifier?.clear();
       setRecaptchaVerifier(null);
-      toast.error("Không gửi được OTP. Kiểm tra Firebase hoặc số điện thoại.");
+      toast.error("Không gửi được mã xác thực. Vui lòng kiểm tra số điện thoại và thử lại.");
     } finally {
       setIsSendingOtp(false);
     }
@@ -173,7 +173,7 @@ export function PatientAuthPage() {
 
   return (
     <AuthShell
-      description="Bệnh nhân đăng nhập bằng OTP điện thoại để đặt lịch, theo dõi lịch hẹn và nhận link tư vấn khi bác sĩ xác nhận."
+      description="Chăm sóc sức khỏe cùng bác sĩ chuyên khoa."
       title={mode === "login" ? "Chào mừng bạn quay lại" : "Đăng ký khám từ xa"}
     >
       <div className="rounded-lg border border-blue-100 bg-white p-6 shadow-soft">
@@ -184,9 +184,6 @@ export function PatientAuthPage() {
           <h1 className="mt-2 text-3xl font-bold text-slate-900">
             {mode === "login" ? "Đăng nhập bằng OTP" : "Đăng ký tài khoản"}
           </h1>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Số điện thoại được xác thực qua Firebase Phone Auth.
-          </p>
         </div>
 
         <div className="mt-6 grid grid-cols-2 rounded-lg bg-blue-50 p-1">

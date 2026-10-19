@@ -54,7 +54,7 @@ export function StaffLoginPage() {
 
   return (
     <AuthShell
-      description="Bác sĩ và quản trị viên đăng nhập bằng email, mật khẩu để xử lý lịch hẹn, quản lý lịch làm việc và theo dõi hệ thống."
+      description="Dành cho bác sĩ và quản trị viên."
       title="Cổng nhân viên y tế"
     >
       <div className="rounded-lg border border-blue-100 bg-white p-6 shadow-soft">

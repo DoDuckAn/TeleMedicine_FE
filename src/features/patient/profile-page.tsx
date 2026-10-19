@@ -187,10 +187,6 @@ export function PatientProfilePage() {
               <h1 className="mt-1 text-3xl font-bold text-slate-900">
                 Hồ sơ hiển thị cho bác sĩ
               </h1>
-              <p className="mt-2 leading-7 text-muted-foreground">
-                Cập nhật thông tin y tế để bác sĩ nắm bối cảnh trước buổi tư
-                vấn.
-              </p>
             </div>
 
             <form

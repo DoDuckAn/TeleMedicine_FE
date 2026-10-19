@@ -1,4 +1,4 @@
-import { KeyRound, MapPin, PhoneCall } from "lucide-react";
+import { PhoneCall } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -36,26 +36,6 @@ export function AuthShell({ children, description, title }: AuthShellProps) {
             <p className="mt-5 text-lg leading-8 text-blue-50">{description}</p>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="rounded-lg border border-white/35 bg-white/10 p-4 text-sm">
-              <p className="flex items-center gap-2 font-bold">
-                <MapPin aria-hidden="true" className="size-4" />
-                Cơ sở tư vấn trực tuyến
-              </p>
-              <p className="mt-2 text-blue-100">
-                Đặt lịch, xác nhận và tham gia tư vấn video.
-              </p>
-            </div>
-            <div className="rounded-lg border border-white/35 bg-white/10 p-4 text-sm">
-              <p className="flex items-center gap-2 font-bold">
-                <KeyRound aria-hidden="true" className="size-4" />
-                Bảo mật tài khoản
-              </p>
-              <p className="mt-2 text-blue-100">
-                Phân quyền bệnh nhân, bác sĩ và quản trị viên.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 

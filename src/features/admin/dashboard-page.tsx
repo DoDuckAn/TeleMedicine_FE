@@ -90,10 +90,6 @@ export function AdminDashboardPage() {
               <h1 className="mt-1 text-3xl font-bold text-slate-900">
                 Dashboard quản trị
               </h1>
-              <p className="mt-2 max-w-3xl leading-7 text-muted-foreground">
-                Theo dõi lưu lượng lịch khám, tài khoản đang hoạt động và nhóm
-                bác sĩ có nhiều phiên tư vấn nhất.
-              </p>
             </div>
             <Button
               onClick={() => setFilters(defaultFilters())}

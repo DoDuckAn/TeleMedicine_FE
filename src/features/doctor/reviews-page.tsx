@@ -112,10 +112,6 @@ export function DoctorReviewsPage() {
               <h1 className="mt-1 text-3xl font-bold text-slate-900">
                 Đánh giá của tôi
               </h1>
-              <p className="mt-2 max-w-3xl leading-7 text-muted-foreground">
-                Xem đánh giá đã xuất bản, theo dõi đánh giá bị ẩn và phản hồi
-                một lần cho từng đánh giá.
-              </p>
             </div>
             <div className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-amber-700">
               <p className="text-sm font-semibold">Điểm trung bình</p>

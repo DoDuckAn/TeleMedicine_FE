@@ -144,7 +144,7 @@ export function AdminReviewsPage() {
       <section className="grid gap-6">
         <div className="rounded-lg border border-blue-100 bg-white p-5 shadow-sm">
           <p className="text-sm font-semibold uppercase text-primary">
-            Kiểm duyệt review
+            Kiểm duyệt đánh giá
           </p>
           <h1 className="mt-1 text-3xl font-bold text-slate-900">
             Đánh giá bác sĩ

@@ -51,6 +51,19 @@ const eventLabels: Record<
   requestRejected: "Bác sĩ từ chối",
 };
 
+const notificationLabels: Record<string, string> = {
+  BOOKING_CREATED: "Đặt lịch",
+  REQUEST_CREATED: "Yêu cầu khám",
+  REQUEST_CONFIRMED: "Xác nhận lịch",
+  REQUEST_REJECTED: "Từ chối lịch",
+  REQUEST_EXPIRED: "Hết hạn yêu cầu",
+  APPOINTMENT_CANCELLED: "Hủy lịch",
+  APPOINTMENT_COMPLETED: "Hoàn thành buổi khám",
+  REMINDER_1_HOUR: "Nhắc lịch trước 1 giờ",
+  REMINDER_15_MINUTES: "Nhắc lịch trước 15 phút",
+  DOCTOR_NO_SHOW: "Buổi khám không diễn ra",
+};
+
 export function NotificationsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -136,14 +149,11 @@ export function NotificationsPage() {
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
               <div>
                 <p className="text-sm font-semibold uppercase text-primary">
-                  Inbox
+                  Hộp thư
                 </p>
                 <h1 className="mt-1 text-3xl font-bold text-slate-900">
-                  Thông báo trong app
+                  Thông báo
                 </h1>
-                <p className="mt-2 leading-7 text-muted-foreground">
-                  Theo dõi xác nhận lịch, từ chối, hủy lịch và nhắc lịch khám.
-                </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -183,7 +193,7 @@ export function NotificationsPage() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-primary">
-                          {notification.type}
+                          {notificationLabels[notification.type] ?? "Thông báo"}
                         </span>
                         {!notification.readAt ? (
                           <span className="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
@@ -292,7 +302,7 @@ export function NotificationsPage() {
                 <PreferenceToggle
                   checked={preferences.channels.push}
                   icon={Smartphone}
-                  label="Push notification"
+                  label="Thông báo trên thiết bị"
                   onChange={(checked) =>
                     preferencesMutation.mutate({
                       channels: { push: checked },

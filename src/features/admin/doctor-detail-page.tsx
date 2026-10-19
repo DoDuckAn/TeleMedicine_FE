@@ -51,7 +51,7 @@ import { formatDateTime, formatRating } from "@/lib/format";
 import type { UserStatus, WeeklySchedule } from "@/types/api";
 
 const doctorSchema = z.object({
-  avatarUrl: z.string().url("Avatar URL không hợp lệ"),
+  avatarUrl: z.string().url("Đường dẫn ảnh không hợp lệ"),
   bio: z.string().min(10, "Giới thiệu tối thiểu 10 ký tự").max(1000),
   email: z.string().email("Email không hợp lệ"),
   fullName: z.string().min(2, "Nhập họ tên").max(72),
@@ -337,7 +337,7 @@ export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
                   </Field>
                   <Field
                     error={form.formState.errors.avatarUrl?.message}
-                    label="Avatar URL"
+                    label="Đường dẫn ảnh đại diện"
                   >
                     <Input {...form.register("avatarUrl")} />
                   </Field>

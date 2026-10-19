@@ -264,10 +264,6 @@ export function DoctorProfilePage() {
                 <h1 className="mt-1 text-3xl font-bold text-slate-900">
                   Thông tin hiển thị cho bệnh nhân
                 </h1>
-                <p className="mt-2 leading-7 text-muted-foreground">
-                  Cập nhật thông tin chuyên môn, kinh nghiệm và giới thiệu để
-                  bệnh nhân có đủ ngữ cảnh trước khi đặt lịch.
-                </p>
               </div>
 
               <form
