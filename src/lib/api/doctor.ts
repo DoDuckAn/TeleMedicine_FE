@@ -273,7 +273,7 @@ export function getDoctorHistoryAppointments(
   { accessToken }: AuthenticatedOptions,
 ) {
   return apiFetch<PaginatedResponse<Appointment>>(
-    "/appointments/doctor/history",
+    "/appointments/history",
     {
       accessToken,
       params,

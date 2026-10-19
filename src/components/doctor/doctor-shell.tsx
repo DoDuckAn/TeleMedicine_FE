@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getDoctorPendingAppointments,
-  getDoctorHistoryAppointments,
+  getDoctorUpcomingAppointments,
 } from "@/lib/api/doctor";
 import { RoleMenuNav, useRoleMenu } from "@/components/role-menu";
 
@@ -40,12 +40,10 @@ export function DoctorShell({
   const futureQuery = useQuery({
     queryKey: ["doctor", "appointments", "nav-future", user?.id],
     queryFn: () =>
-      getDoctorHistoryAppointments(
+      getDoctorUpcomingAppointments(
         {
           limit: 1,
           page: 1,
-          status: "CONFIRMED",
-          from: new Date().toISOString(),
         },
         auth,
       ),

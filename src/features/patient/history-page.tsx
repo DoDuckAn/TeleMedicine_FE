@@ -9,7 +9,7 @@ import { PatientShell } from "@/components/patient/patient-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
 import { EmptyState, ErrorState, LoadingBlock } from "@/components/ui/feedback";
-import { getPatientHistoryAppointments } from "@/lib/api/patient";
+import { getPatientMedicalHistoryAppointments } from "@/lib/api/patient";
 import { appointmentStatusMeta } from "@/lib/appointment-status";
 import { useAuthStore } from "@/lib/auth/session-store";
 import type { AppointmentStatus } from "@/types/api";
@@ -34,7 +34,7 @@ export function PatientHistoryPage() {
     enabled: Boolean(accessToken),
     placeholderData: keepPreviousData,
     queryFn: () =>
-      getPatientHistoryAppointments(
+      getPatientMedicalHistoryAppointments(
         {
           from: toIsoStart(from),
           limit: 10,

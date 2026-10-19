@@ -102,6 +102,16 @@ export function getPatientHistoryAppointments(
   params: AppointmentListParams | undefined,
   { accessToken }: AuthenticatedOptions,
 ) {
+  return apiFetch<PaginatedResponse<Appointment>>("/appointments/history", {
+    accessToken,
+    params,
+  });
+}
+
+export function getPatientMedicalHistoryAppointments(
+  params: AppointmentListParams | undefined,
+  { accessToken }: AuthenticatedOptions,
+) {
   return apiFetch<PaginatedResponse<Appointment>>(
     "/appointments/patient/history",
     {
