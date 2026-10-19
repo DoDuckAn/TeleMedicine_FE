@@ -166,14 +166,18 @@ export function getAdminDoctor(
 }
 
 export function createAdminDoctor(
-  payload: Required<AdminDoctorPayload>,
+  payload: Omit<Required<AdminDoctorPayload>, "avatarUrl">,
+  avatar: File,
   { accessToken }: AuthenticatedOptions,
 ) {
+  const body = new FormData();
+  body.append("profile", JSON.stringify(payload));
+  body.append("avatar", avatar);
   return apiFetch<AuthUser & { doctorProfile?: DoctorProfile }>(
     "/admin/doctors",
     {
       accessToken,
-      json: payload,
+      body,
       method: "POST",
     },
   );

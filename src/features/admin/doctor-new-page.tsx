@@ -2,10 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Upload } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -27,7 +28,6 @@ import {
 import type { WeeklySchedule } from "@/types/api";
 
 const doctorSchema = z.object({
-  avatarUrl: z.string().url("Avatar URL không hợp lệ"),
   bio: z.string().min(10, "Giới thiệu tối thiểu 10 ký tự").max(1000),
   email: z.string().email("Email không hợp lệ"),
   fullName: z.string().min(2, "Nhập họ tên").max(72),
@@ -49,6 +49,16 @@ export function AdminDoctorNewPage() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
   const auth = { accessToken: accessToken ?? "" };
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string>();
+  const avatarInput = useRef<HTMLInputElement>(null);
+  useEffect(
+    () => () => {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    },
+    [avatarPreview],
+  );
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule>(
     createEmptyWeeklySchedule,
   );
@@ -65,7 +75,6 @@ export function AdminDoctorNewPage() {
 
   const form = useForm<DoctorFormInput, unknown, DoctorFormOutput>({
     defaultValues: {
-      avatarUrl: "",
       bio: "",
       email: "",
       fullName: "",
@@ -84,7 +93,6 @@ export function AdminDoctorNewPage() {
 
       return createAdminDoctor(
         {
-          avatarUrl: values.avatarUrl.trim(),
           bio: values.bio.trim(),
           email: values.email.trim(),
           fullName: values.fullName.trim(),
@@ -93,12 +101,17 @@ export function AdminDoctorNewPage() {
           weeklySchedule: normalizedSchedule,
           yearsOfExperience: values.yearsOfExperience,
         },
+        avatarFile!,
         auth,
       );
     },
     onError: (error) => {
       console.error(error);
-      toast.error("Không tạo được tài khoản bác sĩ.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Không tạo được tài khoản bác sĩ.",
+      );
     },
     onSuccess: async (data) => {
       toast.success("Đã tạo tài khoản bác sĩ.");
@@ -124,6 +137,10 @@ export function AdminDoctorNewPage() {
   }
 
   function submit(values: DoctorFormOutput) {
+    if (!avatarFile) {
+      setAvatarError("Chọn ảnh đại diện cho bác sĩ.");
+      return;
+    }
     const scheduleError = validateWeeklySchedule(
       normalizeWeeklySchedule(weeklySchedule),
       settingsQuery.data?.slotDurationMinutes ?? 30,
@@ -192,13 +209,65 @@ export function AdminDoctorNewPage() {
                 />
               </Field>
               <Field
-                error={form.formState.errors.avatarUrl?.message}
-                label="Avatar URL"
+                error={avatarError}
+                label="Ảnh đại diện"
+                hint="JPG, PNG hoặc WebP. Tối đa 5 MB."
               >
-                <Input
-                  placeholder="https://..."
-                  {...form.register("avatarUrl")}
+                <input
+                  ref={avatarInput}
+                  className="sr-only"
+                  tabIndex={-1}
+                  accept="image/jpeg,image/png,image/webp"
+                  type="file"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setAvatarFile(null);
+                    setAvatarPreview(null);
+                    setAvatarError(undefined);
+                    if (!file) return;
+                    if (
+                      !["image/jpeg", "image/png", "image/webp"].includes(
+                        file.type,
+                      )
+                    ) {
+                      setAvatarError("Chọn ảnh JPG, PNG hoặc WebP.");
+                      event.target.value = "";
+                      return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                      setAvatarError("Ảnh đại diện không được vượt quá 5 MB.");
+                      event.target.value = "";
+                      return;
+                    }
+                    setAvatarFile(file);
+                    setAvatarPreview(URL.createObjectURL(file));
+                  }}
+                  disabled={createMutation.isPending}
                 />
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={createMutation.isPending}
+                    onClick={() => avatarInput.current?.click()}
+                  >
+                    <Upload aria-hidden="true" className="size-4" />
+                    Chọn ảnh
+                  </Button>
+                  <span className="min-w-0 break-all text-sm text-muted-foreground">
+                    {avatarFile?.name ?? "Chưa chọn ảnh"}
+                  </span>
+                </div>
+                {avatarPreview ? (
+                  <Image
+                    alt="Ảnh đại diện đã chọn"
+                    src={avatarPreview}
+                    width={96}
+                    height={96}
+                    unoptimized
+                    className="mt-3 size-24 rounded-lg object-cover"
+                  />
+                ) : null}
               </Field>
             </div>
 
@@ -270,7 +339,11 @@ export function AdminDoctorNewPage() {
 
             <Button
               className="justify-self-start"
-              disabled={createMutation.isPending}
+              disabled={
+                createMutation.isPending ||
+                settingsQuery.isPending ||
+                specialtiesQuery.isPending
+              }
               type="submit"
               variant="success"
             >
