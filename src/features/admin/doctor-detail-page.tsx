@@ -298,7 +298,7 @@ export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
             />
             <QuickMetric
               icon={ShieldAlert}
-              label="Override lịch"
+              label="Thay đổi lịch"
               value={doctor._count?.scheduleOverrides ?? 0}
             />
           </section>
