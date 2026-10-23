@@ -7,7 +7,6 @@ import { LoadingBlock } from "@/components/ui/feedback";
 import { Toaster } from "sonner";
 import { RealtimeProvider } from "@/components/realtime-provider";
 import { shouldRetryQuery, queryRetryDelay } from "@/lib/api/client";
-import { PushNotificationProvider } from "@/components/push-notification-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const hydrated = useAuthStore((state) => state.hydrated);
@@ -38,7 +37,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {hydrated && <RealtimeProvider />}
-      {hydrated ? <PushNotificationProvider>{children}</PushNotificationProvider> : <LoadingBlock className="min-h-screen" />}
+      {hydrated ? children : <LoadingBlock className="min-h-screen" />}
       <Toaster
         richColors
         closeButton
