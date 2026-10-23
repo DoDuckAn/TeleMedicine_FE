@@ -35,6 +35,7 @@ import { getPatientMe } from "@/lib/api/patient";
 import { useAuthStore } from "@/lib/auth/session-store";
 import { formatDateTime } from "@/lib/format";
 import type { NotificationPreferences } from "@/types/api";
+import { usePushNotifications } from "@/components/push-notification-provider";
 
 const eventLabels: Record<
   Exclude<keyof NotificationPreferences["events"], "doctorNoShow">,
@@ -65,6 +66,7 @@ const notificationLabels: Record<string, string> = {
 };
 
 export function NotificationsPage() {
+  const push = usePushNotifications();
   const router = useRouter();
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -140,6 +142,16 @@ export function NotificationsPage() {
   const notifications = notificationsQuery.data?.items ?? [];
   const totalPages = notificationsQuery.data?.pagination.totalPages ?? 1;
   const preferences = preferencesQuery.data;
+
+  async function changePush(checked: boolean) {
+    try {
+      if (checked) await push.enable();
+      await preferencesMutation.mutateAsync({ channels: { push: checked } });
+    } catch (error) {
+      if (!(error instanceof Error)) return;
+      toast.error(error.message);
+    }
+  }
 
   return (
     <Shell title="Thông báo">
@@ -303,12 +315,22 @@ export function NotificationsPage() {
                   checked={preferences.channels.push}
                   icon={Smartphone}
                   label="Thông báo trên thiết bị"
-                  onChange={(checked) =>
-                    preferencesMutation.mutate({
-                      channels: { push: checked },
-                    })
-                  }
+                  disabled={preferencesMutation.isPending || push.phase === "connecting"}
+                  onChange={(checked) => void changePush(checked)}
                 />
+                {preferences.channels.push ? (
+                  <div className="space-y-2 text-sm">
+                    <p role="status" className={push.error ? "text-red-700" : "text-slate-600"}>
+                      {push.error ?? (push.phase === "ready" ? "Đã đăng ký thông báo trên trình duyệt này." : push.phase === "connecting" ? "Đang đăng ký thông báo..." : "Trình duyệt này chưa được đăng ký nhận thông báo.")}
+                    </p>
+                    {push.phase !== "ready" ? (
+                      <Button disabled={push.phase === "connecting"} onClick={() => void changePush(true)} variant="outline">
+                        <BellRing aria-hidden="true" className="size-4" />
+                        Cho phép thông báo
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
                 <PreferenceToggle
                   checked={preferences.channels.email}
                   disabled={patientQuery.isLoading}
