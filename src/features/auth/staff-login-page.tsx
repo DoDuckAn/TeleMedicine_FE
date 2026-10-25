@@ -12,7 +12,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { loginStaff } from "@/lib/api/auth";
-import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
+import { getRoleHome } from "@/lib/auth/session-store";
+import { replaceLoginSession } from "@/lib/auth/session-coordinator";
 
 import { AuthShell } from "./auth-shell";
 
@@ -25,7 +26,6 @@ type StaffLoginForm = z.infer<typeof staffLoginSchema>;
 
 export function StaffLoginPage() {
   const router = useRouter();
-  const setSession = useAuthStore((state) => state.setSession);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<StaffLoginForm>({
     defaultValues: {
@@ -41,7 +41,7 @@ export function StaffLoginPage() {
     try {
       const session = await loginStaff(values);
 
-      setSession(session);
+      await replaceLoginSession(session);
       toast.success("Đăng nhập thành công.");
       router.push(getRoleHome(session.user.role));
     } catch (error) {

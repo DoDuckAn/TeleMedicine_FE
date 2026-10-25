@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/auth/session-store";
+import { startSessionSynchronization } from "@/lib/auth/session-coordinator";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { Toaster } from "sonner";
 import { RealtimeProvider } from "@/components/realtime-provider";
@@ -26,12 +27,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    Promise.resolve(useAuthStore.persist.rehydrate()).finally(() =>
-      useAuthStore.getState().finishHydration(),
-    );
-    return useAuthStore.subscribe((state, previous) => {
-      if (state.user?.id !== previous.user?.id) queryClient.clear();
+    const unsubscribe = useAuthStore.subscribe((state, previous) => {
+      if (state.loginId !== previous.loginId) queryClient.clear();
     });
+    const stop = startSessionSynchronization();
+    return () => {
+      stop();
+      unsubscribe();
+    };
   }, [queryClient]);
 
   return (

@@ -17,7 +17,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { loginPatient, registerPatient } from "@/lib/api/auth";
-import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
+import { getRoleHome } from "@/lib/auth/session-store";
+import { replaceLoginSession } from "@/lib/auth/session-coordinator";
 import {
   getFirebaseAuth,
   isFirebaseConfigured,
@@ -49,7 +50,6 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export function PatientAuthPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const setSession = useAuthStore((state) => state.setSession);
   const initialMode =
     searchParams.get("mode") === "register" ? "register" : "login";
   const nextPath = getSafeNextPath(searchParams.get("next"));
@@ -120,7 +120,9 @@ export function PatientAuthPage() {
       console.error(error);
       recaptchaVerifier?.clear();
       setRecaptchaVerifier(null);
-      toast.error("Không gửi được mã xác thực. Vui lòng kiểm tra số điện thoại và thử lại.");
+      toast.error(
+        "Không gửi được mã xác thực. Vui lòng kiểm tra số điện thoại và thử lại.",
+      );
     } finally {
       setIsSendingOtp(false);
     }
@@ -154,7 +156,7 @@ export function PatientAuthPage() {
               gender: registerForm.getValues("gender") as Gender,
             });
 
-      setSession(session);
+      await replaceLoginSession(session);
       toast.success("Đăng nhập thành công.");
       router.push(nextPath ?? getRoleHome(session.user.role));
     } catch (error) {

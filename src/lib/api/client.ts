@@ -1,3 +1,16 @@
+import { useAuthStore } from "@/lib/auth/session-store";
+import {
+  readStoredSession,
+  refreshSession,
+  syncSessionFromStorage,
+  type StoredSession,
+} from "@/lib/auth/session-coordinator";
+import { sameLogin } from "@/lib/auth/session-core";
+import {
+  AUTH_API_BASE_URL,
+  AuthTransportError,
+} from "@/lib/auth/session-transport";
+
 export type ApiErrorPayload = {
   code: string;
   message: string;
@@ -38,8 +51,7 @@ export type ApiRequestOptions = Omit<RequestInit, "headers"> & {
   params?: Record<string, QueryValue>;
 };
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api/v1";
+export const API_BASE_URL = AUTH_API_BASE_URL;
 
 function buildUrl(path: string, params?: Record<string, QueryValue>) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -58,6 +70,10 @@ export async function apiFetch<T>(
   path: string,
   { accessToken, headers, json, params, body, ...init }: ApiRequestOptions = {},
 ) {
+  // Bind the entire request, including retries and response delivery, to one login.
+  const requestSession = accessToken
+    ? captureRequestSession(accessToken)
+    : null;
   const requestHeaders = new Headers(headers);
   const requestBody = json === undefined ? body : JSON.stringify(json);
 
@@ -77,26 +93,25 @@ export async function apiFetch<T>(
     body: requestBody,
     headers: requestHeaders,
   });
+  assertRequestSession(requestSession);
 
   if (response.status === 401 && accessToken && path !== "/auth/refresh") {
-    const session = useAuthStore.getState();
-    if (session.accessToken) {
-      const nextToken =
-        session.accessToken !== accessToken
-          ? session.accessToken
-          : await refreshAccessToken();
-      if (nextToken) {
-        requestHeaders.set("Authorization", `Bearer ${nextToken}`);
-        response = await timedFetch(buildUrl(path, params), {
-          ...init,
-          body: requestBody,
-          headers: requestHeaders,
-        });
-      }
+    const nextToken = requestSession
+      ? await refreshAccessToken(requestSession)
+      : null;
+    assertRequestSession(requestSession);
+    if (nextToken) {
+      requestHeaders.set("Authorization", `Bearer ${nextToken}`);
+      response = await timedFetch(buildUrl(path, params), {
+        ...init,
+        body: requestBody,
+        headers: requestHeaders,
+      });
     }
   }
 
   const payload = await readEnvelope<T>(response);
+  assertRequestSession(requestSession);
 
   if (!response.ok || !payload.success) {
     const error = payload.success
@@ -114,50 +129,54 @@ export async function apiFetch<T>(
   return payload.data;
 }
 
-let refreshPromise: Promise<string | null> | null = null;
+function sessionChanged() {
+  syncSessionFromStorage();
+  return new ApiError(401, {
+    code: "SESSION_CHANGED",
+    message: "Phiên đăng nhập đã thay đổi. Vui lòng thử lại.",
+  });
+}
 
-export async function refreshAccessToken() {
-  if (refreshPromise) return refreshPromise;
-  const session = useAuthStore.getState();
-  if (!session.refreshToken || !session.user) {
-    session.clearSession();
-    return null;
+function captureRequestSession(accessToken: string): StoredSession {
+  const memory = useAuthStore.getState();
+  const stored = readStoredSession();
+  if (
+    !memory.loginId ||
+    memory.accessToken !== accessToken ||
+    !memory.refreshToken ||
+    !memory.user
+  ) {
+    throw sessionChanged();
   }
-  refreshPromise = (async () => {
-    const response = await timedFetch(buildUrl("/auth/refresh"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken: session.refreshToken }),
-    });
-    const payload = await readEnvelope<{
-      accessToken: string;
-      refreshToken: string;
-    }>(response);
-    // Ignore refresh responses belonging to a session that has since logged out or changed.
-    if (useAuthStore.getState().refreshToken !== session.refreshToken)
-      return null;
-    if (!response.ok || !payload.success) {
-      if (response.status === 401 || response.status === 403)
-        session.clearSession();
-      throw new ApiError(
-        response.status,
-        payload.success
-          ? { code: "REFRESH_FAILED", message: response.statusText }
-          : payload.error,
-      );
-    }
-    useAuthStore
-      .getState()
-      .setSession({ ...payload.data, user: session.user! });
-    return payload.data.accessToken;
-  })();
+  const expected: StoredSession = {
+    accessToken,
+    refreshToken: memory.refreshToken,
+    user: memory.user,
+    loginId: memory.loginId,
+    version: memory.version,
+  };
+  if (!sameLogin(stored, expected)) throw sessionChanged();
+  return expected;
+}
+
+function assertRequestSession(expected: StoredSession | null) {
+  if (expected && !sameLogin(readStoredSession(), expected))
+    throw sessionChanged();
+}
+
+export async function refreshAccessToken(expected?: StoredSession) {
+  const token = useAuthStore.getState().accessToken;
+  if (!expected && !token) return null;
+  const session = expected ?? captureRequestSession(token!);
   try {
-    return await refreshPromise;
-  } finally {
-    refreshPromise = null;
+    return await refreshSession(session);
+  } catch (error) {
+    throw new ApiError(error instanceof AuthTransportError ? error.status : 0, {
+      code: "REFRESH_FAILED",
+      message: "Không thể làm mới phiên đăng nhập. Vui lòng thử lại.",
+    });
   }
 }
-import { useAuthStore } from "@/lib/auth/session-store";
 
 function retryAfterMs(response: Response) {
   const value = response.headers.get("Retry-After");

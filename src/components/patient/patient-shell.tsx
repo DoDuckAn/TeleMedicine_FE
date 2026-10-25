@@ -10,6 +10,8 @@ import { RoleMenuNav, useRoleMenu } from "@/components/role-menu";
 import { buttonVariants } from "@/components/ui/button";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
+import { logoutCurrentSession } from "@/lib/auth/session-coordinator";
+import { toast } from "sonner";
 
 export function PatientShell({
   children,
@@ -21,7 +23,6 @@ export function PatientShell({
   const pathname = usePathname();
   const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const clearSession = useAuthStore((state) => state.clearSession);
   const user = useAuthStore((state) => state.user);
   const menuQuery = useRoleMenu(accessToken ?? "", user?.role);
 
@@ -40,9 +41,12 @@ export function PatientShell({
     return <LoadingBlock className="min-h-screen rounded-none border-0" />;
   }
 
-  function logout() {
-    clearSession();
-    router.push("/auth/patient");
+  async function logout() {
+    try {
+      if (await logoutCurrentSession()) router.push("/auth/patient");
+    } catch {
+      toast.error("Chưa thể đăng xuất an toàn. Vui lòng thử lại.");
+    }
   }
 
   return (
