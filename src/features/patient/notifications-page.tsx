@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { StatusBadge } from "@/components/appointment/status-badge";
 import { PatientShell } from "@/components/patient/patient-shell";
 import { DoctorShell } from "@/components/doctor/doctor-shell";
+import { usePushNotifications } from "@/components/push-notification-provider";
 import { getDoctorMe } from "@/lib/api/doctor";
 import { Modal } from "@/components/ui/modal";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -70,6 +71,7 @@ export function NotificationsPage() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
   const loginId = useAuthStore((state) => state.loginId);
+  const push = usePushNotifications();
   const role=useAuthStore((state)=>state.user?.role);
   const isDoctor=role==="DOCTOR";
   const Shell=isDoctor?DoctorShell:PatientShell;
@@ -88,19 +90,19 @@ export function NotificationsPage() {
   const notificationsQuery = useQuery({
     enabled,
     queryFn: () => getNotifications({ limit: 10, page, unreadOnly }, auth),
-    queryKey: ["notifications", "list", { page, unreadOnly }],
+    queryKey: ["notifications", "list", loginId, { page, unreadOnly }],
   });
 
   const unreadQuery = useQuery({
     enabled,
     queryFn: () => getUnreadNotificationCount(auth),
-    queryKey: ["notifications", "unread-count"],
+    queryKey: ["notifications", "unread-count", loginId],
   });
 
   const preferencesQuery = useQuery({
     enabled,
     queryFn: () => getNotificationPreferences(auth),
-    queryKey: ["notifications", "preferences"],
+    queryKey: ["notifications", "preferences", loginId],
   });
 
   const markReadMutation = useSessionMutation({
@@ -302,15 +304,13 @@ export function NotificationsPage() {
             <div className="mt-5 space-y-5">
               <div className="grid gap-3">
                 <PreferenceToggle
-                  checked={preferences.channels.push}
+                  checked={preferences.channels.push && push.status === "enabled"}
+                  disabled={push.status === "enabling"}
                   icon={Smartphone}
                   label="Thông báo trên thiết bị"
-                  onChange={(checked) =>
-                    preferencesMutation.mutate({
-                      channels: { push: checked },
-                    })
-                  }
+                  onChange={(checked) => { void (checked ? push.enable() : push.disable()); }}
                 />
+                {push.message ? <p className="text-sm text-muted-foreground" role="status">{push.message}</p> : null}
                 <PreferenceToggle
                   checked={preferences.channels.email}
                   disabled={patientQuery.isLoading}

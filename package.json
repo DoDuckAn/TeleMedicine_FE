@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --require ./tests/register-typescript.mjs --test ./tests/auth-session.test.ts ./tests/auth-client.test.ts ./tests/push-session.test.ts ./tests/push-worker.test.ts",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --check .",
