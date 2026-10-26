@@ -259,6 +259,22 @@ export function listAdminSpecialties({
   });
 }
 
+export function listAdminSpecialtyPage(
+  params: {
+    page: number;
+    limit: number;
+    q?: string;
+    status?: SpecialtyStatus | "";
+  },
+  { accessToken, loginId }: AuthenticatedOptions,
+) {
+  return apiFetch<PaginatedResponse<Specialty>>("/specialties/admin", {
+    accessToken,
+    loginId,
+    params,
+  });
+}
+
 export function createAdminSpecialty(
   payload: Required<Pick<AdminSpecialtyPayload, "code" | "name">> &
     Pick<AdminSpecialtyPayload, "description">,
