@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
@@ -44,7 +46,7 @@ export function AdminPatientDetailPage({ userId }: { userId: string }) {
       updateAdminPatientStatus(userId, payload, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không cập nhật được trạng thái bệnh nhân.");
+      toast.error(getErrorMessage(error, "Không cập nhật được trạng thái bệnh nhân."));
     },
     onSuccess: async () => {
       toast.success("Đã cập nhật trạng thái bệnh nhân.");

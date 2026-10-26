@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
@@ -65,7 +67,7 @@ export function PatientReviewPage({ doctorId }: { doctorId: string }) {
       ),
     onError: (error) => {
       console.error(error);
-      toast.error("Không gửi được đánh giá.");
+      toast.error(getErrorMessage(error, "Không gửi được đánh giá."));
     },
     onSuccess: () => {
       toast.success("Cảm ơn bạn đã đánh giá bác sĩ.");

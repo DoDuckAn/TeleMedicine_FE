@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
@@ -82,8 +84,8 @@ export function SpecialtyDoctorsModal({
       toast.success("Đã lưu danh sách bác sĩ.");
       onClose();
     },
-    onError: () =>
-      toast.error("Không lưu được danh sách. Các thay đổi chưa được áp dụng."),
+    onError: (error) =>
+      toast.error(getErrorMessage(error, "Không lưu được danh sách. Các thay đổi chưa được áp dụng.")),
   });
   function undo(id: string) {
     setChanges((current) => {

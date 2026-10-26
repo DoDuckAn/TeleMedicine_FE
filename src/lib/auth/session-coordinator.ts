@@ -1,5 +1,7 @@
 "use client";
 
+import { UserFacingError } from "../user-facing-error";
+
 import {
   createSessionCoordinator,
   MAX_PENDING_LOGOUTS,
@@ -22,7 +24,7 @@ export type { StoredSession } from "./session-core";
 export async function withSessionLock<T>(fn: () => Promise<T>): Promise<T> {
   if (typeof navigator === "undefined" || !navigator.locks) {
     // An in-memory/localStorage mutex cannot protect rotating tokens across tabs.
-    throw new Error("Vui lòng dùng trình duyệt hỗ trợ Web Locks qua HTTPS hoặc localhost để đăng nhập an toàn.");
+    throw new UserFacingError("Vui lòng dùng trình duyệt hỗ trợ Web Locks qua HTTPS hoặc localhost để đăng nhập an toàn.");
   }
   return navigator.locks.request(SESSION_LOCK_NAME, fn);
 }

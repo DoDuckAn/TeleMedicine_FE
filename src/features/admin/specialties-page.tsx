@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { Loader2, Plus, Save, Trash2, Undo2, X } from "lucide-react";
@@ -66,7 +68,7 @@ export function AdminSpecialtiesPage() {
       ),
     onError: (error) => {
       console.error(error);
-      toast.error("Không tạo được chuyên khoa.");
+      toast.error(getErrorMessage(error, "Không tạo được chuyên khoa."));
     },
     onSuccess: () => {
       toast.success("Đã tạo chuyên khoa.");
@@ -89,7 +91,7 @@ export function AdminSpecialtiesPage() {
       ),
     onError: (error) => {
       console.error(error);
-      toast.error("Không cập nhật được chuyên khoa.");
+      toast.error(getErrorMessage(error, "Không cập nhật được chuyên khoa."));
     },
     onSuccess: () => {
       toast.success("Đã cập nhật chuyên khoa.");
@@ -103,7 +105,7 @@ export function AdminSpecialtiesPage() {
       deleteAdminSpecialty(specialtyId, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không ẩn được chuyên khoa.");
+      toast.error(getErrorMessage(error, "Không ẩn được chuyên khoa."));
     },
     onSuccess: () => {
       toast.success("Đã ẩn chuyên khoa.");
@@ -116,7 +118,7 @@ export function AdminSpecialtiesPage() {
       updateAdminSpecialty(specialtyId, { status: "ACTIVE" }, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không khôi phục được chuyên khoa.");
+      toast.error(getErrorMessage(error, "Không khôi phục được chuyên khoa."));
     },
     onSuccess: () => {
       toast.success("Đã khôi phục chuyên khoa.");

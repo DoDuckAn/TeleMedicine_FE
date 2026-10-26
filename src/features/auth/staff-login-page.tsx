@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { KeyRound, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
@@ -46,7 +48,7 @@ export function StaffLoginPage() {
       router.push(getRoleHome(session.user.role));
     } catch (error) {
       console.error(error);
-      toast.error("Email hoặc mật khẩu không đúng.");
+      toast.error(getErrorMessage(error, "Email hoặc mật khẩu không đúng."));
     } finally {
       setIsSubmitting(false);
     }

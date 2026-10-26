@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
@@ -38,7 +40,7 @@ export function DoctorRequestsPage() {
       confirmDoctorAppointment(appointmentId, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không xác nhận được lịch hẹn.");
+      toast.error(getErrorMessage(error, "Không xác nhận được lịch hẹn."));
     },
     onSuccess: () => {
       toast.success("Đã xác nhận lịch hẹn và tạo phòng Google Meet.");
@@ -56,7 +58,7 @@ export function DoctorRequestsPage() {
     }) => rejectDoctorAppointment(appointmentId, { reason }, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không từ chối được lịch hẹn.");
+      toast.error(getErrorMessage(error, "Không từ chối được lịch hẹn."));
     },
     onSuccess: () => {
       toast.success("Đã từ chối lịch hẹn.");

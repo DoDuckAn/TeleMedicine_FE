@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
@@ -64,7 +66,7 @@ export function AppointmentDetailPage({
       cancelAppointment(appointmentId, values, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không hủy được lịch hẹn. Kiểm tra điều kiện hủy lịch.");
+      toast.error(getErrorMessage(error, "Không hủy được lịch hẹn. Kiểm tra điều kiện hủy lịch."));
     },
     onSuccess: async () => {
       toast.success("Đã hủy lịch hẹn.");

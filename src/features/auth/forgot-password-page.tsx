@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, KeyRound, Loader2, MailCheck } from "lucide-react";
 import Link from "next/link";
@@ -62,7 +64,7 @@ export function ForgotPasswordPage() {
       toast.success("Nếu email tồn tại, mã OTP đã được gửi.");
     } catch (error) {
       console.error(error);
-      toast.error("Không gửi được OTP. Vui lòng thử lại.");
+      toast.error(getErrorMessage(error, "Không gửi được OTP. Vui lòng thử lại."));
     } finally {
       setIsSubmitting(false);
     }
@@ -77,7 +79,7 @@ export function ForgotPasswordPage() {
       router.push("/auth/staff");
     } catch (error) {
       console.error(error);
-      toast.error("OTP hoặc mật khẩu không hợp lệ.");
+      toast.error(getErrorMessage(error, "OTP hoặc mật khẩu không hợp lệ."));
     } finally {
       setIsSubmitting(false);
     }

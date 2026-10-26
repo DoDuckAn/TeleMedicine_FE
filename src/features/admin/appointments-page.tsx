@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { ExternalLink, Loader2, Search, Video, X, XCircle } from "lucide-react";
@@ -273,7 +275,7 @@ function AppointmentDetailModal({
       cancelAdminAppointment(appointmentId, { reason: reason.trim() }, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không hủy được lịch hẹn.");
+      toast.error(getErrorMessage(error, "Không hủy được lịch hẹn."));
     },
     onSuccess: async () => {
       toast.success("Đã hủy lịch hẹn.");

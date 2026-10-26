@@ -1,5 +1,8 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+import { UserFacingError } from "@/lib/user-facing-error";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
@@ -106,7 +109,7 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
   const createMutation = useSessionMutation({
     mutationFn: (values: BookingForm) => {
       if (!currentSlot) {
-        throw new Error("NO_SLOT");
+        throw new UserFacingError("Vui lòng chọn khung giờ khám.");
       }
 
       return createAppointment(
@@ -120,9 +123,7 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
     },
     onError: (error) => {
       console.error(error);
-      toast.error(
-        "Không đặt được lịch. Khung giờ có thể đã được người khác chọn.",
-      );
+      toast.error(getErrorMessage(error, "Không đặt được lịch. Vui lòng thử lại."));
       setSelectedSlot(null);
       void scheduleQuery.refetch();
     },

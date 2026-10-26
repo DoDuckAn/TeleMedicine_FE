@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Loader2, Phone, ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -120,9 +122,7 @@ export function PatientAuthPage() {
       console.error(error);
       recaptchaVerifier?.clear();
       setRecaptchaVerifier(null);
-      toast.error(
-        "Không gửi được mã xác thực. Vui lòng kiểm tra số điện thoại và thử lại.",
-      );
+      toast.error(getErrorMessage(error, "Không gửi được mã xác thực. Vui lòng kiểm tra số điện thoại và thử lại."));
     } finally {
       setIsSendingOtp(false);
     }
@@ -161,7 +161,7 @@ export function PatientAuthPage() {
       router.push(nextPath ?? getRoleHome(session.user.role));
     } catch (error) {
       console.error(error);
-      toast.error("OTP không hợp lệ hoặc tài khoản chưa sẵn sàng.");
+      toast.error(getErrorMessage(error, "OTP không hợp lệ hoặc tài khoản chưa sẵn sàng."));
     } finally {
       setIsVerifying(false);
     }

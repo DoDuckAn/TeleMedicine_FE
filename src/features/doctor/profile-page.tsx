@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 /* eslint-disable @next/next/no-img-element */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -131,7 +133,7 @@ export function DoctorProfilePage() {
       ),
     onError: (error) => {
       console.error(error);
-      toast.error("Không cập nhật được hồ sơ bác sĩ.");
+      toast.error(getErrorMessage(error, "Không cập nhật được hồ sơ bác sĩ."));
     },
     onSuccess: async () => {
       toast.success("Đã cập nhật hồ sơ bác sĩ.");
@@ -144,7 +146,7 @@ export function DoctorProfilePage() {
     mutationFn: (file: File) => uploadDoctorAvatar(file, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không upload được ảnh đại diện.");
+      toast.error(getErrorMessage(error, "Không tải được ảnh đại diện."));
     },
     onSuccess: async () => {
       toast.success("Đã cập nhật ảnh đại diện.");
@@ -158,7 +160,7 @@ export function DoctorProfilePage() {
     mutationFn: () => requestDoctorPasswordOtp(auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không gửi được OTP đổi mật khẩu.");
+      toast.error(getErrorMessage(error, "Không gửi được OTP đổi mật khẩu."));
     },
     onSuccess: () => {
       toast.success("Đã gửi OTP đổi mật khẩu qua email.");
@@ -169,7 +171,7 @@ export function DoctorProfilePage() {
     mutationFn: (values: PasswordForm) => changeDoctorPassword(values, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không đổi được mật khẩu.");
+      toast.error(getErrorMessage(error, "Không đổi được mật khẩu."));
     },
     onSuccess: async () => {
       toast.success("Đã đổi mật khẩu. Vui lòng đăng nhập lại.");

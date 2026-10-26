@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { isCurrentLogin } from "@/lib/auth/session-ownership";
@@ -155,7 +157,7 @@ export function AdminSettingsPage() {
         toast.error("Cài đặt đã thay đổi ở nơi khác. Vui lòng kiểm tra lại.");
         return;
       }
-      toast.error("Không lưu được cài đặt.");
+      toast.error(getErrorMessage(error, "Không lưu được cài đặt."));
     },
     onSuccess: (data) => {
       if (!isCurrentLogin(loginId)) return;

@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { Plus, Search, ShieldAlert } from "lucide-react";
@@ -81,7 +83,7 @@ export function AdminDoctorsPage() {
       updateAdminDoctorStatus(doctorId, { reason, status: nextStatus }, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không cập nhật được trạng thái bác sĩ.");
+      toast.error(getErrorMessage(error, "Không cập nhật được trạng thái bác sĩ."));
     },
     onSuccess: async () => {
       toast.success("Đã cập nhật trạng thái bác sĩ.");

@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
@@ -136,7 +138,7 @@ export function DoctorSchedulePage() {
       updateDoctorWeeklySchedule(nextSchedule, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không lưu được lịch tuần.");
+      toast.error(getErrorMessage(error, "Không lưu được lịch tuần."));
     },
     onSuccess: (data) => {
       toast.success("Đã lưu lịch làm việc hằng tuần.");
@@ -162,7 +164,7 @@ export function DoctorSchedulePage() {
       ),
     onError: (error) => {
       console.error(error);
-      toast.error("Không tạo được thay đổi lịch.");
+      toast.error(getErrorMessage(error, "Không tạo được thay đổi lịch."));
     },
     onSuccess: (data) => {
       const suffix = data.cancelledAppointmentCount
@@ -189,7 +191,7 @@ export function DoctorSchedulePage() {
       ),
     onError: (error) => {
       console.error(error);
-      toast.error("Không khôi phục được lịch gốc.");
+      toast.error(getErrorMessage(error, "Không khôi phục được lịch gốc."));
     },
     onSuccess: () => {
       toast.success("Đã khôi phục lịch gốc cho khoảng đã chọn.");
@@ -203,7 +205,7 @@ export function DoctorSchedulePage() {
       deleteDoctorScheduleOverride(overrideId, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không xóa được thay đổi lịch.");
+      toast.error(getErrorMessage(error, "Không xóa được thay đổi lịch."));
     },
     onSuccess: () => {
       toast.success("Đã xóa thay đổi lịch.");

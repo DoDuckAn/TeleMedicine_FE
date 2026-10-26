@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
@@ -70,7 +72,7 @@ export function DoctorReviewsPage() {
     }) => replyDoctorReview(reviewId, { content }, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không gửi được phản hồi đánh giá.");
+      toast.error(getErrorMessage(error, "Không gửi được phản hồi đánh giá."));
     },
     onSuccess: async (_, variables) => {
       toast.success("Đã gửi phản hồi đánh giá.");

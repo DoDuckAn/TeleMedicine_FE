@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
@@ -110,7 +112,7 @@ export function NotificationsPage() {
       markNotificationRead(notificationId, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không đánh dấu đã đọc được thông báo.");
+      toast.error(getErrorMessage(error, "Không đánh dấu đã đọc được thông báo."));
     },
     onSuccess: () => invalidateNotifications(queryClient),
   });
@@ -119,7 +121,7 @@ export function NotificationsPage() {
     mutationFn: () => markAllNotificationsRead(auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không đánh dấu tất cả thông báo.");
+      toast.error(getErrorMessage(error, "Không đánh dấu tất cả thông báo."));
     },
     onSuccess: (result) => {
       toast.success(`Đã đánh dấu ${result.updatedCount} thông báo.`);
@@ -133,7 +135,7 @@ export function NotificationsPage() {
     ) => updateNotificationPreferences(payload, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không cập nhật được cài đặt thông báo.");
+      toast.error(getErrorMessage(error, "Không cập nhật được cài đặt thông báo."));
     },
     onSuccess: () => {
       toast.success("Đã cập nhật cài đặt thông báo.");

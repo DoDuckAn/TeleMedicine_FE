@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
@@ -110,11 +112,7 @@ export function AdminDoctorNewPage() {
     },
     onError: (error) => {
       console.error(error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Không tạo được tài khoản bác sĩ.",
-      );
+      toast.error(getErrorMessage(error, "Không tạo được tài khoản bác sĩ."));
     },
     onSuccess: async (data) => {
       toast.success("Đã tạo tài khoản bác sĩ.");

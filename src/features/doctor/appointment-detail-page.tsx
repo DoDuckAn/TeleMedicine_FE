@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
@@ -81,7 +83,7 @@ export function DoctorAppointmentDetailPage({
     mutationFn: () => confirmDoctorAppointment(appointmentId, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không xác nhận được lịch hẹn.");
+      toast.error(getErrorMessage(error, "Không xác nhận được lịch hẹn."));
     },
     onSuccess: () => {
       toast.success("Đã xác nhận lịch hẹn và tạo phòng Google Meet.");
@@ -94,7 +96,7 @@ export function DoctorAppointmentDetailPage({
       rejectDoctorAppointment(appointmentId, values, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không từ chối được lịch hẹn.");
+      toast.error(getErrorMessage(error, "Không từ chối được lịch hẹn."));
     },
     onSuccess: () => {
       toast.success("Đã từ chối lịch hẹn.");
@@ -107,7 +109,7 @@ export function DoctorAppointmentDetailPage({
     mutationFn: () => completeDoctorAppointment(appointmentId, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không hoàn tất được buổi khám.");
+      toast.error(getErrorMessage(error, "Không hoàn tất được buổi khám."));
     },
     onSuccess: () => {
       toast.success("Đã hoàn tất buổi khám.");
@@ -120,7 +122,7 @@ export function DoctorAppointmentDetailPage({
       cancelDoctorAppointment(appointmentId, values, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không hủy được lịch hẹn.");
+      toast.error(getErrorMessage(error, "Không hủy được lịch hẹn."));
     },
     onSuccess: () => {
       toast.success("Đã hủy lịch hẹn.");

@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import {
   GripVertical,
   Pencil,
@@ -91,7 +93,7 @@ export function AdminMenusPage() {
         );
       else
         toast.error(
-          error instanceof Error ? error.message : "Không thể lưu menu",
+          getErrorMessage(error, "Không thể lưu menu"),
         );
     },
   });

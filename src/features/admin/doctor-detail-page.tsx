@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSessionMutation } from "@/lib/auth/use-session-mutation";
@@ -162,7 +164,7 @@ export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
       ),
     onError: (error) => {
       console.error(error);
-      toast.error("Không cập nhật được bác sĩ.");
+      toast.error(getErrorMessage(error, "Không cập nhật được bác sĩ."));
     },
     onSuccess: async (updated) => {
       toast.success("Đã cập nhật bác sĩ.");
@@ -177,7 +179,7 @@ export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
       updateAdminDoctorStatus(doctorId, payload, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không cập nhật được trạng thái bác sĩ.");
+      toast.error(getErrorMessage(error, "Không cập nhật được trạng thái bác sĩ."));
     },
     onSuccess: async (updated) => {
       toast.success("Đã cập nhật trạng thái bác sĩ.");

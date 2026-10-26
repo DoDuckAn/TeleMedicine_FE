@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/error-message";
+
 /* eslint-disable @next/next/no-img-element */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -100,7 +102,7 @@ export function PatientProfilePage() {
       ),
     onError: (error) => {
       console.error(error);
-      toast.error("Không cập nhật được hồ sơ.");
+      toast.error(getErrorMessage(error, "Không cập nhật được hồ sơ."));
     },
     onSuccess: async () => {
       toast.success("Đã cập nhật hồ sơ.");
@@ -112,7 +114,7 @@ export function PatientProfilePage() {
     mutationFn: (file: File) => uploadPatientAvatar(file, auth),
     onError: (error) => {
       console.error(error);
-      toast.error("Không upload được ảnh đại diện.");
+      toast.error(getErrorMessage(error, "Không tải được ảnh đại diện."));
     },
     onSuccess: async () => {
       toast.success("Đã cập nhật ảnh đại diện.");
