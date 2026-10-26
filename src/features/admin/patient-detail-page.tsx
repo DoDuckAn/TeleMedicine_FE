@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
   ArrowLeft,
   CalendarClock,
@@ -28,7 +29,8 @@ import type { UserStatus } from "@/types/api";
 export function AdminPatientDetailPage({ userId }: { userId: string }) {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [statusModalOpen, setStatusModalOpen] = useState(false);
 
   const patientQuery = useQuery({
@@ -37,7 +39,7 @@ export function AdminPatientDetailPage({ userId }: { userId: string }) {
     queryKey: ["admin", "patients", userId],
   });
 
-  const statusMutation = useMutation({
+  const statusMutation = useSessionMutation({
     mutationFn: (payload: { reason: string; status: UserStatus }) =>
       updateAdminPatientStatus(userId, payload, auth),
     onError: (error) => {

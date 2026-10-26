@@ -81,16 +81,17 @@ export type CancelAppointmentPayload = {
   reason: string;
 };
 
-export function getDoctorMe({ accessToken }: AuthenticatedOptions) {
-  return apiFetch<DoctorMe>("/doctors/me", { accessToken });
+export function getDoctorMe({ accessToken, loginId }: AuthenticatedOptions) {
+  return apiFetch<DoctorMe>("/doctors/me", { accessToken, loginId });
 }
 
 export function updateDoctorMe(
   payload: UpdateDoctorProfilePayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Pick<DoctorMe, "doctorProfile" | "email">>("/doctors/me", {
     accessToken,
+    loginId,
     json: payload,
     method: "PATCH",
   });
@@ -98,13 +99,14 @@ export function updateDoctorMe(
 
 export function uploadDoctorAvatar(
   avatar: File,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   const formData = new FormData();
   formData.append("avatar", avatar);
 
   return apiFetch<{ avatarUrl: string }>("/doctors/me/avatar", {
     accessToken,
+    loginId,
     body: formData,
     method: "POST",
   });
@@ -112,21 +114,24 @@ export function uploadDoctorAvatar(
 
 export function requestDoctorPasswordOtp({
   accessToken,
+  loginId,
 }: AuthenticatedOptions) {
   return apiFetch<{ message: string }>("/doctors/me/password/request-otp", {
     accessToken,
+    loginId,
     method: "POST",
   });
 }
 
 export function changeDoctorPassword(
   payload: ChangeDoctorPasswordPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<{ passwordChanged: boolean; sessionsRevoked: boolean }>(
     "/doctors/me/password",
     {
       accessToken,
+      loginId,
       json: payload,
       method: "PATCH",
     },
@@ -135,26 +140,32 @@ export function changeDoctorPassword(
 
 export function getDoctorStatistics(
   params: DoctorStatisticsParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<DoctorStatistics>("/doctors/me/statistics", {
     accessToken,
+    loginId,
     params,
   });
 }
 
-export function getDoctorWeeklySchedule({ accessToken }: AuthenticatedOptions) {
+export function getDoctorWeeklySchedule({
+  accessToken,
+  loginId,
+}: AuthenticatedOptions) {
   return apiFetch<DoctorWeeklySchedule>("/doctor-schedule/weekly", {
     accessToken,
+    loginId,
   });
 }
 
 export function updateDoctorWeeklySchedule(
   weeklySchedule: WeeklySchedule,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<DoctorWeeklySchedule>("/doctor-schedule/weekly", {
     accessToken,
+    loginId,
     json: { weeklySchedule },
     method: "PUT",
   });
@@ -162,30 +173,33 @@ export function updateDoctorWeeklySchedule(
 
 export function getDoctorScheduleCalendar(
   weekStart: string | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<DoctorScheduleCalendar>("/doctor-schedule/calendar", {
     accessToken,
+    loginId,
     params: { weekStart },
   });
 }
 
 export function getDoctorScheduleOverrides(
   params: DoctorScheduleOverridesParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<DoctorScheduleOverrideList>("/doctor-schedule/overrides", {
     accessToken,
+    loginId,
     params,
   });
 }
 
 export function createDoctorScheduleOverride(
   payload: CreateScheduleOverridePayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<CreateScheduleOverrideResult>("/doctor-schedule/overrides", {
     accessToken,
+    loginId,
     json: payload,
     method: "POST",
   });
@@ -193,12 +207,13 @@ export function createDoctorScheduleOverride(
 
 export function restoreDoctorScheduleOverrides(
   payload: RestoreScheduleOverridesPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<RestoreScheduleOverridesResult>(
     "/doctor-schedule/overrides/restore",
     {
       accessToken,
+      loginId,
       json: payload,
       method: "POST",
     },
@@ -207,12 +222,13 @@ export function restoreDoctorScheduleOverrides(
 
 export function deleteDoctorScheduleOverride(
   overrideId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<{ removed: true }>(
     `/doctor-schedule/overrides/${overrideId}`,
     {
       accessToken,
+      loginId,
       method: "DELETE",
     },
   );
@@ -220,12 +236,13 @@ export function deleteDoctorScheduleOverride(
 
 export function getDoctorOwnReviews(
   params: DoctorReviewListParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<
     PaginatedResponse<DoctorReview> & { summary?: DoctorRatingSummary }
   >("/doctor-reviews/me", {
     accessToken,
+    loginId,
     params,
   });
 }
@@ -233,10 +250,11 @@ export function getDoctorOwnReviews(
 export function replyDoctorReview(
   reviewId: string,
   payload: { content: string },
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<DoctorReview>(`/doctor-reviews/${reviewId}/reply`, {
     accessToken,
+    loginId,
     json: payload,
     method: "POST",
   });
@@ -244,12 +262,13 @@ export function replyDoctorReview(
 
 export function getDoctorPendingAppointments(
   params: Pick<DoctorAppointmentListParams, "limit" | "page"> | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<PaginatedResponse<Appointment>>(
     "/appointments/doctor/pending",
     {
       accessToken,
+      loginId,
       params,
     },
   );
@@ -257,12 +276,13 @@ export function getDoctorPendingAppointments(
 
 export function getDoctorUpcomingAppointments(
   params: Pick<DoctorAppointmentListParams, "limit" | "page"> | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<PaginatedResponse<Appointment>>(
     "/appointments/doctor/upcoming",
     {
       accessToken,
+      loginId,
       params,
     },
   );
@@ -270,32 +290,32 @@ export function getDoctorUpcomingAppointments(
 
 export function getDoctorHistoryAppointments(
   params: DoctorAppointmentListParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
-  return apiFetch<PaginatedResponse<Appointment>>(
-    "/appointments/history",
-    {
-      accessToken,
-      params,
-    },
-  );
+  return apiFetch<PaginatedResponse<Appointment>>("/appointments/history", {
+    accessToken,
+    loginId,
+    params,
+  });
 }
 
 export function getDoctorAppointment(
   appointmentId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Appointment>(`/appointments/${appointmentId}`, {
     accessToken,
+    loginId,
   });
 }
 
 export function confirmDoctorAppointment(
   appointmentId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Appointment>(`/appointments/${appointmentId}/confirm`, {
     accessToken,
+    loginId,
     method: "POST",
   });
 }
@@ -303,10 +323,11 @@ export function confirmDoctorAppointment(
 export function rejectDoctorAppointment(
   appointmentId: string,
   payload: RejectAppointmentPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Appointment>(`/appointments/${appointmentId}/reject`, {
     accessToken,
+    loginId,
     json: payload,
     method: "POST",
   });
@@ -314,10 +335,11 @@ export function rejectDoctorAppointment(
 
 export function completeDoctorAppointment(
   appointmentId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Appointment>(`/appointments/${appointmentId}/complete`, {
     accessToken,
+    loginId,
     method: "POST",
   });
 }
@@ -325,10 +347,11 @@ export function completeDoctorAppointment(
 export function cancelDoctorAppointment(
   appointmentId: string,
   payload: CancelAppointmentPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Appointment>(`/appointments/${appointmentId}/cancel`, {
     accessToken,
+    loginId,
     json: payload,
     method: "POST",
   });

@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { afterEach, beforeEach, test } from "node:test";
+import { MutationCache, QueryClient } from "@tanstack/react-query";
+import {
+  guardSessionMutationCallbacks,
+  guardSessionMutationOptions,
+} from "../src/lib/auth/session-mutation";
+import { getPatientMe } from "../src/lib/api/patient";
+import { registerPushDevice } from "../src/lib/api/notifications";
 
 import { apiFetch, ApiError } from "../src/lib/api/client";
 import {
@@ -149,7 +156,10 @@ test("old A 401 after switch to B never retries with B's bearer", async () => {
     sent.push(new Headers(init?.headers).get("Authorization") ?? "none");
     return response.promise;
   };
-  const request = apiFetch("/private", { accessToken: old.accessToken });
+  const request = apiFetch("/private", {
+    accessToken: old.accessToken,
+    loginId: old.loginId,
+  });
   const next = session("B");
   store(next);
   response.resolve(envelope(401));
@@ -163,7 +173,10 @@ test("successful A response cannot populate B's query cache", async () => {
   store(old);
   const response = deferred<Response>();
   globalThis.fetch = async () => response.promise;
-  const request = apiFetch("/private", { accessToken: old.accessToken });
+  const request = apiFetch("/private", {
+    accessToken: old.accessToken,
+    loginId: old.loginId,
+  });
   store(session("B"));
   response.resolve(envelope(200, { privateData: "A" }));
   await assert.rejects(request, changed);
@@ -180,7 +193,10 @@ test("account change during JSON parsing also discards old response", async () =
     return parsed.promise;
   };
   globalThis.fetch = async () => response;
-  const request = apiFetch("/private", { accessToken: old.accessToken });
+  const request = apiFetch("/private", {
+    accessToken: old.accessToken,
+    loginId: old.loginId,
+  });
   await reading.promise;
   store(session()); // Same user, different actual login.
   parsed.resolve({ success: true, data: { privateData: "A" } });
@@ -210,8 +226,14 @@ test("concurrent HTTP 401s rotate once under Web Locks and both reuse rotated ac
       : envelope();
   };
   const responses = await Promise.all([
-    apiFetch("/private/one", { accessToken: old.accessToken }),
-    apiFetch("/private/two", { accessToken: old.accessToken }),
+    apiFetch("/private/one", {
+      accessToken: old.accessToken,
+      loginId: old.loginId,
+    }),
+    apiFetch("/private/two", {
+      accessToken: old.accessToken,
+      loginId: old.loginId,
+    }),
   ]);
   assert.equal(responses.length, 2);
   assert.equal(refreshCalls, 1);
@@ -235,7 +257,10 @@ test("stale callback carrying A bearer after B login is rejected before fetch", 
     return envelope();
   };
   await assert.rejects(
-    apiFetch("/private", { accessToken: old.accessToken }),
+    apiFetch("/private", {
+      accessToken: old.accessToken,
+      loginId: old.loginId,
+    }),
     changed,
   );
   assert.equal(requests, 0);
@@ -302,4 +327,258 @@ test("persisted legacy/corrupt sessions fail validation instead of gaining a new
   syncSessionFromStorage();
   assert.equal(useAuthStore.getState().loginId, null);
   assert.equal(readStoredSession(), null);
+});
+
+test("retained logout callback owns its rendered login, never the new account", async () => {
+  const old = session();
+  store(old);
+  const retainedLogout = () => logoutCurrentSession(old.loginId);
+  const next = session("B");
+  store(next);
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests++;
+    return envelope();
+  };
+  assert.equal(await retainedLogout(), false);
+  assert.equal(readStoredSession()?.loginId, next.loginId);
+  assert.equal(requests, 0);
+});
+
+test("duplicate bearer strings never let an old login callback adopt a new loginId", async () => {
+  const old = session();
+  const next = { ...session(), accessToken: old.accessToken };
+  store(old);
+  const retainedQuery = () => getPatientMe(old);
+  store(next);
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests++;
+    return envelope();
+  };
+  await assert.rejects(retainedQuery(), changed);
+  assert.equal(requests, 0);
+  assert.equal(readStoredSession()?.loginId, next.loginId);
+});
+
+test("retained same-login old bearer uses latest disk token, including an unsynced other-tab refresh", async () => {
+  const old = session();
+  store(old);
+  const retainedQuery = () => getPatientMe(old);
+  const rotated = {
+    ...old,
+    version: 2,
+    accessToken: "test-current-access",
+    refreshToken: "test-current-refresh",
+  };
+  storage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ state: rotated }));
+  const sent: string[] = [];
+  globalThis.fetch = async (_input, init) => {
+    sent.push(new Headers(init?.headers).get("Authorization")!);
+    return envelope(200, { id: "A" });
+  };
+  assert.deepEqual(await retainedQuery(), { id: "A" });
+  assert.deepEqual(sent, ["Bearer test-current-access"]);
+  assert.equal(useAuthStore.getState().version, 2);
+});
+
+test("matching bearer without a captured loginId fails closed", async () => {
+  const old = session();
+  store(old);
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests++;
+    return envelope();
+  };
+  await assert.rejects(
+    apiFetch("/private", { accessToken: old.accessToken, loginId: null }),
+    changed,
+  );
+  assert.equal(requests, 0);
+});
+
+test("mutation success after the HTTP guard cannot repopulate B cache, even without an observer", async () => {
+  const old = session();
+  const next = session("B");
+  store(old);
+  const callbacks: string[] = [];
+  const cache = new MutationCache({
+    onSuccess: () => {
+      // The switch happens after mutationFn returned, before local onSuccess.
+      store(next);
+      client.clear();
+    },
+  });
+  const client = new QueryClient({ mutationCache: cache });
+  globalThis.fetch = async () => envelope(200, { owner: "A" });
+  const mutation = cache.build(
+    client,
+    guardSessionMutationOptions(old.loginId, {
+      mutationFn: () => apiFetch<{ owner: string }>("/private", old),
+      onSuccess: (data) => {
+        callbacks.push("success");
+        client.setQueryData(["admin", "system-settings"], data);
+      },
+      onSettled: () => {
+        callbacks.push("settled");
+      },
+    }),
+  );
+  await mutation.execute(undefined);
+  assert.equal(readStoredSession()?.loginId, next.loginId);
+  assert.equal(client.getQueryData(["admin", "system-settings"]), undefined);
+  assert.deepEqual(callbacks, []);
+});
+
+test("old mutation errors and settled callbacks are suppressed after switch", async () => {
+  const old = session();
+  store(old);
+  const callbacks: string[] = [];
+  const cache = new MutationCache({
+    onError: () => {
+      store(session("B"));
+    },
+  });
+  const client = new QueryClient({ mutationCache: cache });
+  const mutation = cache.build(
+    client,
+    guardSessionMutationOptions(old.loginId, {
+      mutationFn: async () => {
+        throw new Error("test failure");
+      },
+      onError: () => {
+        callbacks.push("error");
+      },
+      onSettled: () => {
+        callbacks.push("settled");
+      },
+    }),
+  );
+  await assert.rejects(mutation.execute(undefined), /test failure/);
+  assert.deepEqual(callbacks, []);
+});
+
+test("retained mutation cannot start for a replaced login with the same bearer", async () => {
+  const old = session();
+  store(old);
+  let executions = 0;
+  const options = guardSessionMutationOptions(old.loginId, {
+    mutationFn: async () => {
+      executions++;
+    },
+  });
+  store({ ...session(), accessToken: old.accessToken });
+  const client = new QueryClient();
+  const mutation = client.getMutationCache().build(client, options);
+  await assert.rejects(mutation.execute(undefined), /session changed/i);
+  assert.equal(executions, 0);
+});
+
+test("same-login rotation preserves mutation context and success callbacks", async () => {
+  const old = session();
+  store(old);
+  const callbacks: string[] = [];
+  const client = new QueryClient();
+  const mutation = client.getMutationCache().build(
+    client,
+    guardSessionMutationOptions(old.loginId, {
+      onMutate: () => ({ owner: "A" }),
+      mutationFn: async () => {
+        store({
+          ...old,
+          version: 2,
+          accessToken: "test-rotated",
+          refreshToken: "test-rotated-refresh",
+        });
+        return "saved";
+      },
+      onSuccess: (data, _variables, context) => {
+        callbacks.push(`${context.owner}:${data}`);
+      },
+      onSettled: () => {
+        callbacks.push("settled");
+      },
+    }),
+  );
+  assert.equal(await mutation.execute(undefined), "saved");
+  assert.deepEqual(callbacks, ["A:saved", "settled"]);
+});
+
+test("per-call mutation callbacks also retain their originating loginId", () => {
+  const old = session();
+  store(old);
+  const seen: string[] = [];
+  const callbacks = guardSessionMutationCallbacks<void, Error, void>(
+    old.loginId,
+    {
+      onSuccess: () => {
+        seen.push("success");
+      },
+      onError: () => {
+        seen.push("error");
+      },
+      onSettled: () => {
+        seen.push("settled");
+      },
+    },
+  );
+  const context = {
+    client: new QueryClient(),
+    meta: undefined,
+    mutationKey: undefined,
+  };
+  store(session("B"));
+  callbacks.onSuccess?.(undefined, undefined, undefined, context);
+  callbacks.onError?.(new Error("test failure"), undefined, undefined, context);
+  callbacks.onSettled?.(undefined, null, undefined, undefined, context);
+  assert.deepEqual(seen, []);
+});
+
+test("raw push registration rejects stale loginId even with duplicate bearers", async () => {
+  const old = session();
+  store(old);
+  const payload = {
+    token: "test-fcm",
+    platform: "WEB" as const,
+    refreshToken: old.refreshToken,
+    installationId: "test-installation",
+    receiptSecret: "s".repeat(43),
+  };
+  store({ ...session(), accessToken: old.accessToken });
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests++;
+    return envelope();
+  };
+  await assert.rejects(registerPushDevice(payload, old), /session changed/i);
+  assert.equal(requests, 0);
+});
+
+test("raw push registration rejects stale refresh body and late account switch without retry", async () => {
+  const old = session();
+  store(old);
+  const payload = {
+    token: "test-fcm",
+    platform: "WEB" as const,
+    refreshToken: old.refreshToken,
+    installationId: "test-installation",
+    receiptSecret: "s".repeat(43),
+  };
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests++;
+    const result = envelope();
+    result.json = async () => {
+      store(session("B"));
+      return { success: true, data: {} };
+    };
+    return result;
+  };
+  const rotated = { ...old, version: 2, refreshToken: "test-latest-refresh" };
+  store(rotated);
+  await assert.rejects(registerPushDevice(payload, old), /session changed/i);
+  assert.equal(requests, 0);
+  store(old);
+  await assert.rejects(registerPushDevice(payload, old), /session changed/i);
+  assert.equal(requests, 1);
 });

@@ -45,11 +45,13 @@ export class ApiError extends Error {
 type QueryValue = string | number | boolean | null | undefined;
 
 export type ApiRequestOptions = Omit<RequestInit, "headers"> & {
-  accessToken?: string;
   headers?: HeadersInit;
   json?: unknown;
   params?: Record<string, QueryValue>;
-};
+} & (
+    | { accessToken: string; loginId: string | null }
+    | { accessToken?: never; loginId?: never }
+  );
 
 export const API_BASE_URL = AUTH_API_BASE_URL;
 
@@ -68,12 +70,19 @@ function buildUrl(path: string, params?: Record<string, QueryValue>) {
 
 export async function apiFetch<T>(
   path: string,
-  { accessToken, headers, json, params, body, ...init }: ApiRequestOptions = {},
+  {
+    accessToken,
+    loginId,
+    headers,
+    json,
+    params,
+    body,
+    ...init
+  }: ApiRequestOptions = {},
 ) {
   // Bind the entire request, including retries and response delivery, to one login.
-  const requestSession = accessToken
-    ? captureRequestSession(accessToken)
-    : null;
+  const requestSession =
+    accessToken !== undefined ? captureRequestSession(loginId) : null;
   const requestHeaders = new Headers(headers);
   const requestBody = json === undefined ? body : JSON.stringify(json);
 
@@ -84,8 +93,8 @@ export async function apiFetch<T>(
     requestHeaders.set("Content-Type", "application/json");
   }
 
-  if (accessToken) {
-    requestHeaders.set("Authorization", `Bearer ${accessToken}`);
+  if (requestSession) {
+    requestHeaders.set("Authorization", `Bearer ${requestSession.accessToken}`);
   }
 
   let response = await timedFetch(buildUrl(path, params), {
@@ -95,7 +104,7 @@ export async function apiFetch<T>(
   });
   assertRequestSession(requestSession);
 
-  if (response.status === 401 && accessToken && path !== "/auth/refresh") {
+  if (response.status === 401 && requestSession && path !== "/auth/refresh") {
     const nextToken = requestSession
       ? await refreshAccessToken(requestSession)
       : null;
@@ -137,26 +146,14 @@ function sessionChanged() {
   });
 }
 
-function captureRequestSession(accessToken: string): StoredSession {
-  const memory = useAuthStore.getState();
-  const stored = readStoredSession();
-  if (
-    !memory.loginId ||
-    memory.accessToken !== accessToken ||
-    !memory.refreshToken ||
-    !memory.user
-  ) {
-    throw sessionChanged();
-  }
-  const expected: StoredSession = {
-    accessToken,
-    refreshToken: memory.refreshToken,
-    user: memory.user,
-    loginId: memory.loginId,
-    version: memory.version,
-  };
-  if (!sameLogin(stored, expected)) throw sessionChanged();
-  return expected;
+function captureRequestSession(
+  loginId: string | null | undefined,
+): StoredSession {
+  const stored = syncSessionFromStorage();
+  if (!loginId || !stored || stored.loginId !== loginId) throw sessionChanged();
+  // Bearers can be identical across logins or stale after rotation. Only the
+  // caller's captured loginId establishes ownership; disk supplies live tokens.
+  return stored;
 }
 
 function assertRequestSession(expected: StoredSession | null) {
@@ -165,9 +162,9 @@ function assertRequestSession(expected: StoredSession | null) {
 }
 
 export async function refreshAccessToken(expected?: StoredSession) {
-  const token = useAuthStore.getState().accessToken;
-  if (!expected && !token) return null;
-  const session = expected ?? captureRequestSession(token!);
+  const loginId = useAuthStore.getState().loginId;
+  if (!expected && !loginId) return null;
+  const session = expected ?? captureRequestSession(loginId);
   try {
     return await refreshSession(session);
   } catch (error) {

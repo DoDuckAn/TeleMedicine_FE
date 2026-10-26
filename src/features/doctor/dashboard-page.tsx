@@ -24,7 +24,8 @@ import { useAuthStore } from "@/lib/auth/session-store";
 
 export function DoctorDashboardPage() {
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const enabled = Boolean(accessToken);
 
   const meQuery = useQuery({

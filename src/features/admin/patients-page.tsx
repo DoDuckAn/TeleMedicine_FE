@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { Search, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -28,7 +24,8 @@ import type { AdminPatient, Gender, UserStatus } from "@/types/api";
 export function AdminPatientsPage() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [page, setPage] = useState(1);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<UserStatus | "">("");
@@ -61,7 +58,7 @@ export function AdminPatientsPage() {
     ],
   });
 
-  const statusMutation = useMutation({
+  const statusMutation = useSessionMutation({
     mutationFn: ({
       nextStatus,
       patientId,

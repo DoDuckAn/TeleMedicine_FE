@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -68,10 +69,11 @@ export function NotificationsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
+  const loginId = useAuthStore((state) => state.loginId);
   const role=useAuthStore((state)=>state.user?.role);
   const isDoctor=role==="DOCTOR";
   const Shell=isDoctor?DoctorShell:PatientShell;
-  const auth = { accessToken: accessToken ?? "" };
+  const auth = { accessToken: accessToken ?? "", loginId };
   const enabled = Boolean(accessToken);
   const [page, setPage] = useState(1);
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -101,7 +103,7 @@ export function NotificationsPage() {
     queryKey: ["notifications", "preferences"],
   });
 
-  const markReadMutation = useMutation({
+  const markReadMutation = useSessionMutation({
     mutationFn: (notificationId: string) =>
       markNotificationRead(notificationId, auth),
     onError: (error) => {
@@ -111,7 +113,7 @@ export function NotificationsPage() {
     onSuccess: () => invalidateNotifications(queryClient),
   });
 
-  const markAllMutation = useMutation({
+  const markAllMutation = useSessionMutation({
     mutationFn: () => markAllNotificationsRead(auth),
     onError: (error) => {
       console.error(error);
@@ -123,7 +125,7 @@ export function NotificationsPage() {
     },
   });
 
-  const preferencesMutation = useMutation({
+  const preferencesMutation = useSessionMutation({
     mutationFn: (
       payload: Parameters<typeof updateNotificationPreferences>[0],
     ) => updateNotificationPreferences(payload, auth),

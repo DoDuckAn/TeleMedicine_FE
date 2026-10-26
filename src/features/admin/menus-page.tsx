@@ -9,7 +9,9 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
+import { isCurrentLogin } from "@/lib/auth/session-ownership";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/admin-shell";
@@ -42,8 +44,9 @@ export function AdminMenusPage() {
   const [newPath, setNewPath] = useState("");
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const accessToken = useAuthStore((state) => state.accessToken) ?? "";
+  const loginId = useAuthStore((state) => state.loginId);
   const queryClient = useQueryClient();
-  const auth = { accessToken };
+  const auth = { accessToken, loginId };
   const query = useQuery({
     queryKey: ["admin", "menus", role],
     queryFn: () => getAdminMenu(role, auth),
@@ -57,7 +60,7 @@ export function AdminMenusPage() {
     menu?.pages?.filter(
       (page) => !items.some((item) => item.path === page.path),
     ) ?? [];
-  const mutation = useMutation({
+  const mutation = useSessionMutation({
     mutationFn: () =>
       saveMenu(
         role,
@@ -74,6 +77,7 @@ export function AdminMenusPage() {
         auth,
       ),
     onSuccess: (data) => {
+      if (!isCurrentLogin(loginId)) return;
       queryClient.setQueryData(["admin", "menus", role], data);
       setDraft(null);
       setEditing(null);

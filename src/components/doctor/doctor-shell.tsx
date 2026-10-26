@@ -15,7 +15,10 @@ import { BrandMark } from "@/components/brand-mark";
 import { buttonVariants } from "@/components/ui/button";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
-import { logoutCurrentSession } from "@/lib/auth/session-coordinator";
+import {
+  logoutCurrentSession,
+  readStoredSession,
+} from "@/lib/auth/session-coordinator";
 import { toast } from "sonner";
 
 export function DoctorShell({
@@ -28,8 +31,9 @@ export function DoctorShell({
   const pathname = usePathname();
   const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
+  const loginId = useAuthStore((state) => state.loginId);
   const user = useAuthStore((state) => state.user);
-  const auth = { accessToken: accessToken ?? "" };
+  const auth = { accessToken: accessToken ?? "", loginId };
   const enabled = Boolean(accessToken) && user?.role === "DOCTOR";
   const menuQuery = useRoleMenu(accessToken ?? "", user?.role);
   const pendingQuery = useQuery({
@@ -73,7 +77,8 @@ export function DoctorShell({
 
   async function logout() {
     try {
-      if (await logoutCurrentSession()) router.push("/auth/staff");
+      if ((await logoutCurrentSession(loginId)) && !readStoredSession())
+        router.push("/auth/staff");
     } catch {
       toast.error("Chưa thể đăng xuất an toàn. Vui lòng thử lại.");
     }

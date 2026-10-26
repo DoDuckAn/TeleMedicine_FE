@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { ExternalLink, Loader2, Search, Video, X, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -34,7 +30,8 @@ import type { AppointmentStatus } from "@/types/api";
 
 export function AdminAppointmentsPage() {
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [page, setPage] = useState(1);
   const [doctorId, setDoctorId] = useState("");
   const [patientId, setPatientId] = useState("");
@@ -261,7 +258,8 @@ function AppointmentDetailModal({
 }) {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [reason, setReason] = useState("");
 
   const appointmentQuery = useQuery({
@@ -270,7 +268,7 @@ function AppointmentDetailModal({
     queryKey: ["admin", "appointments", appointmentId],
   });
 
-  const cancelMutation = useMutation({
+  const cancelMutation = useSessionMutation({
     mutationFn: () =>
       cancelAdminAppointment(appointmentId, { reason: reason.trim() }, auth),
     onError: (error) => {

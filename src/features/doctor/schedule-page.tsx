@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -76,7 +77,8 @@ const initialOverrideForm: OverrideForm = {
 export function DoctorSchedulePage() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const enabled = Boolean(accessToken);
   const [weekStart, setWeekStart] = useState(getCurrentVietnamWeekStart);
   const [scheduleDraft, setScheduleDraft] = useState<WeeklySchedule | null>(
@@ -129,7 +131,7 @@ export function DoctorSchedulePage() {
   );
   const schedule = scheduleDraft ?? serverSchedule;
 
-  const saveWeeklyMutation = useMutation({
+  const saveWeeklyMutation = useSessionMutation({
     mutationFn: (nextSchedule: WeeklySchedule) =>
       updateDoctorWeeklySchedule(nextSchedule, auth),
     onError: (error) => {
@@ -143,7 +145,7 @@ export function DoctorSchedulePage() {
     },
   });
 
-  const createOverrideMutation = useMutation({
+  const createOverrideMutation = useSessionMutation({
     mutationFn: (values: OverrideForm) =>
       createDoctorScheduleOverride(
         {
@@ -172,7 +174,7 @@ export function DoctorSchedulePage() {
     },
   });
 
-  const restoreMutation = useMutation({
+  const restoreMutation = useSessionMutation({
     mutationFn: (values: { endAt: string; startAt: string }) =>
       restoreDoctorScheduleOverrides(
         {
@@ -196,7 +198,7 @@ export function DoctorSchedulePage() {
     },
   });
 
-  const deleteOverrideMutation = useMutation({
+  const deleteOverrideMutation = useSessionMutation({
     mutationFn: (overrideId: string) =>
       deleteDoctorScheduleOverride(overrideId, auth),
     onError: (error) => {

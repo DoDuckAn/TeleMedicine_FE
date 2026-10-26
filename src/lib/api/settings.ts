@@ -11,8 +11,14 @@ export function getScheduleSettings() {
   return apiFetch<SystemScheduleSettings>("/settings/schedule");
 }
 
-export function getAdminSystemSettings({ accessToken }: AuthenticatedOptions) {
-  return apiFetch<AdminSystemSettings>("/admin/settings", { accessToken });
+export function getAdminSystemSettings({
+  accessToken,
+  loginId,
+}: AuthenticatedOptions) {
+  return apiFetch<AdminSystemSettings>("/admin/settings", {
+    accessToken,
+    loginId,
+  });
 }
 
 export function saveAdminSystemSettings(
@@ -25,10 +31,11 @@ export function saveAdminSystemSettings(
     };
     version: number;
   },
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<AdminSystemSettings>("/admin/settings", {
     accessToken,
+    loginId,
     json: payload,
     method: "PUT",
   });

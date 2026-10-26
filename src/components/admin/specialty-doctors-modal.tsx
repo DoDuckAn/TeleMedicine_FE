@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
+import { isCurrentLogin } from "@/lib/auth/session-ownership";
 import {
   ArrowLeft,
   ArrowRight,
@@ -29,6 +31,7 @@ export function SpecialtyDoctorsModal({
   onClose: () => void;
 }) {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const loginId = useAuthStore((state) => state.loginId);
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<"assigned" | "search">("assigned");
   const [keyword, setKeyword] = useState("");
@@ -51,10 +54,10 @@ export function SpecialtyDoctorsModal({
           specialtyId: mode === "assigned" ? specialty.id : undefined,
           status: mode === "search" ? "ACTIVE" : undefined,
         },
-        { accessToken: accessToken! },
+        { accessToken: accessToken!, loginId },
       ),
   });
-  const save = useMutation({
+  const save = useSessionMutation({
     mutationFn: () =>
       updateSpecialtyDoctors(
         specialty.id,
@@ -64,7 +67,7 @@ export function SpecialtyDoctorsModal({
             (id) => !changes[id].add,
           ),
         },
-        { accessToken: accessToken! },
+        { accessToken: accessToken!, loginId },
       ),
     onSuccess: async () => {
       await Promise.all([
@@ -75,6 +78,7 @@ export function SpecialtyDoctorsModal({
         }),
         queryClient.invalidateQueries({ queryKey: ["public"] }),
       ]);
+      if (!isCurrentLogin(loginId)) return;
       toast.success("Đã lưu danh sách bác sĩ.");
       onClose();
     },

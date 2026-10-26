@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -39,7 +35,8 @@ const statusOptions: { label: string; value: DoctorReviewStatus | "" }[] = [
 export function DoctorReviewsPage() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [page, setPage] = useState(1);
   const [rating, setRating] = useState<number | "">("");
   const [status, setStatus] = useState<DoctorReviewStatus | "">("");
@@ -63,7 +60,7 @@ export function DoctorReviewsPage() {
     queryKey: ["doctor", "reviews", { page, rating, replied, status }],
   });
 
-  const replyMutation = useMutation({
+  const replyMutation = useSessionMutation({
     mutationFn: ({
       content,
       reviewId,

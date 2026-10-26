@@ -24,7 +24,8 @@ const statusOptions: { label: string; value: AppointmentStatus | "" }[] = [
 
 export function PatientHistoryPage() {
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<AppointmentStatus | "">("");
   const [from, setFrom] = useState("");

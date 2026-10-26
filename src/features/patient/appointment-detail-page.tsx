@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
   ArrowLeft,
   CalendarDays,
@@ -41,7 +42,8 @@ export function AppointmentDetailPage({
 }) {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const enabled = Boolean(accessToken && appointmentId);
 
   const appointmentQuery = useQuery({
@@ -57,7 +59,7 @@ export function AppointmentDetailPage({
     resolver: zodResolver(cancelSchema),
   });
 
-  const cancelMutation = useMutation({
+  const cancelMutation = useSessionMutation({
     mutationFn: (values: CancelForm) =>
       cancelAppointment(appointmentId, values, auth),
     onError: (error) => {

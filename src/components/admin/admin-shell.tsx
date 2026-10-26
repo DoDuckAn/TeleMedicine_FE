@@ -9,7 +9,10 @@ import { BrandMark } from "@/components/brand-mark";
 import { buttonVariants } from "@/components/ui/button";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { getRoleHome, useAuthStore } from "@/lib/auth/session-store";
-import { logoutCurrentSession } from "@/lib/auth/session-coordinator";
+import {
+  logoutCurrentSession,
+  readStoredSession,
+} from "@/lib/auth/session-coordinator";
 import { toast } from "sonner";
 import { RoleMenuNav, useRoleMenu } from "@/components/role-menu";
 
@@ -23,6 +26,7 @@ export function AdminShell({
   const pathname = usePathname();
   const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
+  const loginId = useAuthStore((state) => state.loginId);
   const user = useAuthStore((state) => state.user);
   const menuQuery = useRoleMenu(accessToken ?? "", user?.role);
 
@@ -43,7 +47,8 @@ export function AdminShell({
 
   async function logout() {
     try {
-      if (await logoutCurrentSession()) router.push("/auth/staff");
+      if ((await logoutCurrentSession(loginId)) && !readStoredSession())
+        router.push("/auth/staff");
     } catch {
       toast.error("Chưa thể đăng xuất an toàn. Vui lòng thử lại.");
     }

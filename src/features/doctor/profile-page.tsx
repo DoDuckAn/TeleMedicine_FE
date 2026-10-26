@@ -3,7 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation as useMutation } from "@/lib/auth/use-session-mutation";
 import {
   Camera,
   GraduationCap,
@@ -32,6 +33,7 @@ import {
   uploadDoctorAvatar,
 } from "@/lib/api/doctor";
 import { useAuthStore } from "@/lib/auth/session-store";
+import { logoutCurrentSession } from "@/lib/auth/session-coordinator";
 
 const profileSchema = z.object({
   bio: z.string().min(10, "Giới thiệu tối thiểu 10 ký tự").max(1000),
@@ -74,8 +76,8 @@ export function DoctorProfilePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const clearSession = useAuthStore((state) => state.clearSession);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const profileQuery = useQuery({
@@ -169,11 +171,14 @@ export function DoctorProfilePage() {
       console.error(error);
       toast.error("Không đổi được mật khẩu.");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Đã đổi mật khẩu. Vui lòng đăng nhập lại.");
       passwordForm.reset();
-      clearSession();
-      router.push("/auth/staff");
+      try {
+        if (await logoutCurrentSession(loginId)) router.push("/auth/staff");
+      } catch {
+        toast.error("Chưa thể đăng xuất an toàn. Vui lòng thử lại.");
+      }
     },
   });
 

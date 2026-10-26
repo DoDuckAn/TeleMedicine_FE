@@ -3,7 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { Camera, Loader2, Save, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -50,7 +51,8 @@ const emptyProfileValues: ProfileForm = {
 export function PatientProfilePage() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const profileQuery = useQuery({
@@ -82,7 +84,7 @@ export function PatientProfilePage() {
     values: formValues,
   });
 
-  const updateMutation = useMutation({
+  const updateMutation = useSessionMutation({
     mutationFn: (values: ProfileForm) =>
       updatePatientMe(
         {
@@ -106,7 +108,7 @@ export function PatientProfilePage() {
     },
   });
 
-  const avatarMutation = useMutation({
+  const avatarMutation = useSessionMutation({
     mutationFn: (file: File) => uploadPatientAvatar(file, auth),
     onError: (error) => {
       console.error(error);

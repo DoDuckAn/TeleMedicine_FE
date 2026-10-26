@@ -11,9 +11,10 @@ export function NavCount({count,label}:{count?:number;label:string}) {
 
 export function NotificationNavCount() {
   const accessToken=useAuthStore((state)=>state.accessToken);
+  const loginId = useAuthStore((state) => state.loginId);
   const query=useQuery({
     queryKey:["notifications","unread-count"],
-    queryFn:()=>getUnreadNotificationCount({accessToken:accessToken??""}),
+    queryFn:()=>getUnreadNotificationCount({accessToken:accessToken??"", loginId}),
     enabled:Boolean(accessToken),
     staleTime:30_000,
   });

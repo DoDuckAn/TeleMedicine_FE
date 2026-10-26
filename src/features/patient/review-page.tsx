@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { ArrowLeft, Loader2, Send, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,7 +29,8 @@ type ReviewFormOutput = z.output<typeof reviewSchema>;
 export function PatientReviewPage({ doctorId }: { doctorId: string }) {
   const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const enabled = Boolean(accessToken && doctorId);
 
   const doctorQuery = useQuery({
@@ -51,7 +53,7 @@ export function PatientReviewPage({ doctorId }: { doctorId: string }) {
     resolver: zodResolver(reviewSchema),
   });
 
-  const reviewMutation = useMutation({
+  const reviewMutation = useSessionMutation({
     mutationFn: (values: ReviewFormOutput) =>
       createDoctorReview(
         doctorId,

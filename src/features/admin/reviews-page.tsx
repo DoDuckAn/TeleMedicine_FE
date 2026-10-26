@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
   Loader2,
   MessageSquareReply,
@@ -48,7 +44,8 @@ type ModerationTarget = {
 export function AdminReviewsPage() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [page, setPage] = useState(1);
   const [q, setQ] = useState("");
   const [doctorId, setDoctorId] = useState("");
@@ -95,7 +92,7 @@ export function AdminReviewsPage() {
     ],
   });
 
-  const moderationMutation = useMutation({
+  const moderationMutation = useSessionMutation({
     mutationFn: ({
       reason,
       reviewId,

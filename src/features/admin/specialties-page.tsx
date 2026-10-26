@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { Loader2, Plus, Save, Trash2, Undo2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -40,7 +41,8 @@ const emptyForm: SpecialtyForm = {
 export function AdminSpecialtiesPage() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [form, setForm] = useState<SpecialtyForm>(emptyForm);
   const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | null>(
     null,
@@ -52,7 +54,7 @@ export function AdminSpecialtiesPage() {
     queryKey: ["admin", "specialties"],
   });
 
-  const createMutation = useMutation({
+  const createMutation = useSessionMutation({
     mutationFn: () =>
       createAdminSpecialty(
         {
@@ -73,7 +75,7 @@ export function AdminSpecialtiesPage() {
     },
   });
 
-  const updateMutation = useMutation({
+  const updateMutation = useSessionMutation({
     mutationFn: () =>
       updateAdminSpecialty(
         form.editingId ?? "",
@@ -96,7 +98,7 @@ export function AdminSpecialtiesPage() {
     },
   });
 
-  const disableMutation = useMutation({
+  const disableMutation = useSessionMutation({
     mutationFn: (specialtyId: string) =>
       deleteAdminSpecialty(specialtyId, auth),
     onError: (error) => {
@@ -109,7 +111,7 @@ export function AdminSpecialtiesPage() {
     },
   });
 
-  const restoreMutation = useMutation({
+  const restoreMutation = useSessionMutation({
     mutationFn: (specialtyId: string) =>
       updateAdminSpecialty(specialtyId, { status: "ACTIVE" }, auth),
     onError: (error) => {

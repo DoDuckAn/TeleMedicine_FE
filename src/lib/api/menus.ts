@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
+import type { AuthenticatedOptions } from "./patient";
 
 export type MenuRole = "PATIENT" | "DOCTOR" | "ADMIN";
 export type MenuItem = {
@@ -26,12 +27,18 @@ export type RoleMenu = {
   pages?: MenuPage[];
   icons?: string[];
 };
-type Auth = { accessToken: string };
+type Auth = AuthenticatedOptions;
 
 export const getMyMenu = (auth: Auth) =>
-  apiFetch<RoleMenu>("/menus/me", { accessToken: auth.accessToken });
+  apiFetch<RoleMenu>("/menus/me", {
+    accessToken: auth.accessToken,
+    loginId: auth.loginId,
+  });
 export const getAdminMenu = (role: MenuRole, auth: Auth) =>
-  apiFetch<RoleMenu>(`/admin/menus/${role}`, { accessToken: auth.accessToken });
+  apiFetch<RoleMenu>(`/admin/menus/${role}`, {
+    accessToken: auth.accessToken,
+    loginId: auth.loginId,
+  });
 export const createMenuItem = (
   role: MenuRole,
   input: { version: number; label: string; path: string; iconKey?: string },
@@ -41,6 +48,7 @@ export const createMenuItem = (
     method: "POST",
     json: input,
     accessToken: auth.accessToken,
+    loginId: auth.loginId,
   });
 export const updateMenuItem = (
   role: MenuRole,
@@ -57,6 +65,7 @@ export const updateMenuItem = (
     method: "PATCH",
     json: input,
     accessToken: auth.accessToken,
+    loginId: auth.loginId,
   });
 export const reorderMenu = (
   role: MenuRole,
@@ -67,6 +76,7 @@ export const reorderMenu = (
     method: "PUT",
     json: input,
     accessToken: auth.accessToken,
+    loginId: auth.loginId,
   });
 export const deleteMenuItem = (
   role: MenuRole,
@@ -78,6 +88,7 @@ export const deleteMenuItem = (
     method: "DELETE",
     json: { version },
     accessToken: auth.accessToken,
+    loginId: auth.loginId,
   });
 
 export const saveMenu = (
@@ -98,4 +109,5 @@ export const saveMenu = (
     method: "PUT",
     json: input,
     accessToken: auth.accessToken,
+    loginId: auth.loginId,
   });

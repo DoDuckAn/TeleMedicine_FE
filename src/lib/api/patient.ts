@@ -12,6 +12,7 @@ import { apiFetch } from "./client";
 
 export type AuthenticatedOptions = {
   accessToken: string;
+  loginId: string | null;
 };
 
 export type AppointmentListParams = {
@@ -48,16 +49,17 @@ export type CreateDoctorReviewPayload = {
   rating: number;
 };
 
-export function getPatientMe({ accessToken }: AuthenticatedOptions) {
-  return apiFetch<PatientMe>("/patients/me", { accessToken });
+export function getPatientMe({ accessToken, loginId }: AuthenticatedOptions) {
+  return apiFetch<PatientMe>("/patients/me", { accessToken, loginId });
 }
 
 export function updatePatientMe(
   payload: UpdatePatientProfilePayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Pick<PatientMe, "email" | "patientProfile">>("/patients/me", {
     accessToken,
+    loginId,
     json: payload,
     method: "PATCH",
   });
@@ -65,13 +67,14 @@ export function updatePatientMe(
 
 export function uploadPatientAvatar(
   avatar: File,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   const formData = new FormData();
   formData.append("avatar", avatar);
 
   return apiFetch<{ avatarUrl: string }>("/patients/me/avatar", {
     accessToken,
+    loginId,
     body: formData,
     method: "POST",
   });
@@ -79,10 +82,11 @@ export function uploadPatientAvatar(
 
 export function createAppointment(
   payload: CreateAppointmentPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Appointment>("/appointments", {
     accessToken,
+    loginId,
     json: payload,
     method: "POST",
   });
@@ -90,32 +94,35 @@ export function createAppointment(
 
 export function getPatientUpcomingAppointments(
   params: Pick<AppointmentListParams, "limit" | "page"> | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<PaginatedResponse<Appointment>>("/appointments/upcoming", {
     accessToken,
+    loginId,
     params,
   });
 }
 
 export function getPatientHistoryAppointments(
   params: AppointmentListParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<PaginatedResponse<Appointment>>("/appointments/history", {
     accessToken,
+    loginId,
     params,
   });
 }
 
 export function getPatientMedicalHistoryAppointments(
   params: AppointmentListParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<PaginatedResponse<Appointment>>(
     "/appointments/patient/history",
     {
       accessToken,
+      loginId,
       params,
     },
   );
@@ -123,20 +130,22 @@ export function getPatientMedicalHistoryAppointments(
 
 export function getAppointment(
   appointmentId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Appointment>(`/appointments/${appointmentId}`, {
     accessToken,
+    loginId,
   });
 }
 
 export function cancelAppointment(
   appointmentId: string,
   payload: CancelAppointmentPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Appointment>(`/appointments/${appointmentId}/cancel`, {
     accessToken,
+    loginId,
     json: payload,
     method: "POST",
   });
@@ -144,12 +153,13 @@ export function cancelAppointment(
 
 export function getReviewEligibility(
   doctorId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<ReviewEligibility>(
     `/doctor-reviews/${doctorId}/eligibility`,
     {
       accessToken,
+      loginId,
     },
   );
 }
@@ -157,10 +167,11 @@ export function getReviewEligibility(
 export function createDoctorReview(
   doctorId: string,
   payload: CreateDoctorReviewPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<DoctorReview>(`/doctor-reviews/${doctorId}`, {
     accessToken,
+    loginId,
     json: payload,
     method: "POST",
   });

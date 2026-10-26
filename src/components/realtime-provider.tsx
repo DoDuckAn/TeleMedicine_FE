@@ -5,10 +5,12 @@ import { useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 import { API_BASE_URL, refreshAccessToken } from "@/lib/api/client";
 import { useAuthStore } from "@/lib/auth/session-store";
+import { logoutCurrentSession } from "@/lib/auth/session-coordinator";
 
 export function RealtimeProvider() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
+  const loginId = useAuthStore((state) => state.loginId);
   const userId = useAuthStore((state) => state.user?.id);
   const role = useAuthStore((state) => state.user?.role);
 
@@ -61,10 +63,14 @@ export function RealtimeProvider() {
       }, 5000);
     };
     const sessionInvalid = async ({ code }: { code?: string }) => {
-      if (disposed || useAuthStore.getState().accessToken !== accessToken)
+      if (disposed || useAuthStore.getState().accessToken !== accessToken || useAuthStore.getState().loginId !== loginId)
         return;
       if (code === "SESSION_REVOKED" || code === "UNAUTHORIZED") {
-        useAuthStore.getState().clearSession();
+        try {
+          await logoutCurrentSession(loginId);
+        } catch {
+          retry();
+        }
       } else if (code === "TOKEN_EXPIRED" && !refreshRunning) {
         refreshRunning = true;
         try {
@@ -120,7 +126,7 @@ export function RealtimeProvider() {
       socket.removeAllListeners();
       socket.disconnect();
     };
-  }, [accessToken, userId, role, queryClient]);
+  }, [accessToken, loginId, userId, role, queryClient]);
 
   return null;
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
   ArrowLeft,
   BarChart3,
@@ -81,7 +82,8 @@ const emptyValues: DoctorFormInput = {
 export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [scheduleDraft, setScheduleDraft] = useState<WeeklySchedule | null>(
     null,
   );
@@ -142,7 +144,7 @@ export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
   const selectedSpecialtyIds =
     useWatch({ control: form.control, name: "specialtyIds" }) ?? [];
 
-  const updateMutation = useMutation({
+  const updateMutation = useSessionMutation({
     mutationFn: (values: DoctorFormOutput) =>
       updateAdminDoctor(
         doctorId,
@@ -170,7 +172,7 @@ export function AdminDoctorDetailPage({ doctorId }: { doctorId: string }) {
     },
   });
 
-  const statusMutation = useMutation({
+  const statusMutation = useSessionMutation({
     mutationFn: (payload: { reason: string; status: UserStatus }) =>
       updateAdminDoctorStatus(doctorId, payload, auth),
     onError: (error) => {

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getMyMenu, type MenuItem } from "@/lib/api/menus";
 import { NavCount, NotificationNavCount } from "@/components/nav-count";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/lib/auth/session-store";
 
 const iconMap: Record<string, typeof Icons.Home> = {
   Home: Icons.Home,
@@ -25,9 +26,10 @@ const iconMap: Record<string, typeof Icons.Home> = {
 };
 
 export function useRoleMenu(accessToken: string, role?: string) {
+  const loginId = useAuthStore((state) => state.loginId);
   return useQuery({
     queryKey: ["menus", role],
-    queryFn: () => getMyMenu({ accessToken }),
+    queryFn: () => getMyMenu({ accessToken, loginId }),
     enabled: Boolean(accessToken && role),
     staleTime: 5 * 60_000,
   });

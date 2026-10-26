@@ -25,21 +25,22 @@ import type { AuthenticatedOptions } from "./patient";
 export function getAdminDoctorOverrides(
   doctorId: string,
   params: { from?: string; to?: string },
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<DoctorScheduleOverrideList>(
     `/admin/doctors/${doctorId}/overrides`,
-    { accessToken, params },
+    { accessToken, loginId, params },
   );
 }
 
 export function updateSpecialtyDoctors(
   specialtyId: string,
   payload: { addDoctorIds: string[]; removeDoctorIds: string[] },
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<{ id: string }>(`/specialties/${specialtyId}/doctors`, {
     accessToken,
+    loginId,
     json: payload,
     method: "PATCH",
   });
@@ -124,10 +125,11 @@ export type ModerateReviewPayload = {
 
 export function getAdminDashboard(
   params: StatisticsParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<AdminDashboardStatistics>("/admin/dashboard", {
     accessToken,
+    loginId,
     params,
   });
 }
@@ -135,12 +137,13 @@ export function getAdminDashboard(
 export function getAdminDoctorStatistics(
   doctorId: string,
   params: StatisticsParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<AdminDashboardStatistics>(
     `/admin/doctors/${doctorId}/statistics`,
     {
       accessToken,
+      loginId,
       params,
     },
   );
@@ -148,27 +151,29 @@ export function getAdminDoctorStatistics(
 
 export function listAdminDoctors(
   params: AdminDoctorListParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<PaginatedResponse<AdminDoctor>>("/admin/doctors", {
     accessToken,
+    loginId,
     params,
   });
 }
 
 export function getAdminDoctor(
   doctorId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<AdminDoctorDetail>(`/admin/doctors/${doctorId}`, {
     accessToken,
+    loginId,
   });
 }
 
 export function createAdminDoctor(
   payload: Omit<Required<AdminDoctorPayload>, "avatarUrl">,
   avatar: File,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   const body = new FormData();
   body.append("profile", JSON.stringify(payload));
@@ -177,6 +182,7 @@ export function createAdminDoctor(
     "/admin/doctors",
     {
       accessToken,
+      loginId,
       body,
       method: "POST",
     },
@@ -186,10 +192,11 @@ export function createAdminDoctor(
 export function updateAdminDoctor(
   doctorId: string,
   payload: AdminDoctorPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<AdminDoctorDetail>(`/admin/doctors/${doctorId}`, {
     accessToken,
+    loginId,
     json: payload,
     method: "PATCH",
   });
@@ -198,10 +205,11 @@ export function updateAdminDoctor(
 export function updateAdminDoctorStatus(
   doctorId: string,
   payload: UpdateUserStatusPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<AdminDoctorDetail>(`/admin/doctors/${doctorId}/status`, {
     accessToken,
+    loginId,
     json: payload,
     method: "PATCH",
   });
@@ -209,46 +217,56 @@ export function updateAdminDoctorStatus(
 
 export function listAdminPatients(
   params: AdminPatientListParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<PaginatedResponse<AdminPatient>>("/admin/patients", {
     accessToken,
+    loginId,
     params,
   });
 }
 
 export function getAdminPatient(
   userId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<AdminPatientDetail>(`/admin/patients/${userId}`, {
     accessToken,
+    loginId,
   });
 }
 
 export function updateAdminPatientStatus(
   userId: string,
   payload: UpdateUserStatusPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<AdminPatientDetail>(`/admin/patients/${userId}/status`, {
     accessToken,
+    loginId,
     json: payload,
     method: "PATCH",
   });
 }
 
-export function listAdminSpecialties({ accessToken }: AuthenticatedOptions) {
-  return apiFetch<Specialty[]>("/specialties/admin/all", { accessToken });
+export function listAdminSpecialties({
+  accessToken,
+  loginId,
+}: AuthenticatedOptions) {
+  return apiFetch<Specialty[]>("/specialties/admin/all", {
+    accessToken,
+    loginId,
+  });
 }
 
 export function createAdminSpecialty(
   payload: Required<Pick<AdminSpecialtyPayload, "code" | "name">> &
     Pick<AdminSpecialtyPayload, "description">,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Specialty>("/specialties", {
     accessToken,
+    loginId,
     json: payload,
     method: "POST",
   });
@@ -257,10 +275,11 @@ export function createAdminSpecialty(
 export function updateAdminSpecialty(
   specialtyId: string,
   payload: AdminSpecialtyPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Specialty>(`/specialties/${specialtyId}`, {
     accessToken,
+    loginId,
     json: payload,
     method: "PATCH",
   });
@@ -268,10 +287,11 @@ export function updateAdminSpecialty(
 
 export function deleteAdminSpecialty(
   specialtyId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Specialty>(`/specialties/${specialtyId}`, {
     accessToken,
+    loginId,
     method: "DELETE",
   });
 }
@@ -279,12 +299,13 @@ export function deleteAdminSpecialty(
 export function addDoctorToSpecialty(
   specialtyId: string,
   doctorId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Specialty>(
     `/specialties/${specialtyId}/doctors/${doctorId}`,
     {
       accessToken,
+      loginId,
       method: "POST",
     },
   );
@@ -293,12 +314,13 @@ export function addDoctorToSpecialty(
 export function removeDoctorFromSpecialty(
   specialtyId: string,
   doctorId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Specialty>(
     `/specialties/${specialtyId}/doctors/${doctorId}`,
     {
       accessToken,
+      loginId,
       method: "DELETE",
     },
   );
@@ -306,30 +328,33 @@ export function removeDoctorFromSpecialty(
 
 export function listAdminAppointments(
   params: AdminAppointmentListParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<PaginatedResponse<Appointment>>("/appointments/admin/all", {
     accessToken,
+    loginId,
     params,
   });
 }
 
 export function getAdminAppointment(
   appointmentId: string,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Appointment>(`/appointments/${appointmentId}`, {
     accessToken,
+    loginId,
   });
 }
 
 export function cancelAdminAppointment(
   appointmentId: string,
   payload: { reason: string },
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<Appointment>(`/appointments/${appointmentId}/cancel`, {
     accessToken,
+    loginId,
     json: payload,
     method: "POST",
   });
@@ -337,10 +362,11 @@ export function cancelAdminAppointment(
 
 export function listAdminReviews(
   params: AdminReviewListParams | undefined,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<PaginatedResponse<AdminReview>>("/doctor-reviews/admin", {
     accessToken,
+    loginId,
     params,
   });
 }
@@ -348,10 +374,11 @@ export function listAdminReviews(
 export function moderateAdminReview(
   reviewId: string,
   payload: ModerateReviewPayload,
-  { accessToken }: AuthenticatedOptions,
+  { accessToken, loginId }: AuthenticatedOptions,
 ) {
   return apiFetch<AdminReview>(`/doctor-reviews/${reviewId}/moderation`, {
     accessToken,
+    loginId,
     json: payload,
     method: "PATCH",
   });

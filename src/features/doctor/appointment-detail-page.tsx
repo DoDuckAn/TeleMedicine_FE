@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
   ArrowLeft,
   CalendarDays,
@@ -52,7 +53,8 @@ export function DoctorAppointmentDetailPage({
 }) {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const enabled = Boolean(accessToken && appointmentId);
 
   const appointmentQuery = useQuery({
@@ -75,7 +77,7 @@ export function DoctorAppointmentDetailPage({
     resolver: zodResolver(reasonSchema),
   });
 
-  const confirmMutation = useMutation({
+  const confirmMutation = useSessionMutation({
     mutationFn: () => confirmDoctorAppointment(appointmentId, auth),
     onError: (error) => {
       console.error(error);
@@ -87,7 +89,7 @@ export function DoctorAppointmentDetailPage({
     },
   });
 
-  const rejectMutation = useMutation({
+  const rejectMutation = useSessionMutation({
     mutationFn: (values: ReasonForm) =>
       rejectDoctorAppointment(appointmentId, values, auth),
     onError: (error) => {
@@ -101,7 +103,7 @@ export function DoctorAppointmentDetailPage({
     },
   });
 
-  const completeMutation = useMutation({
+  const completeMutation = useSessionMutation({
     mutationFn: () => completeDoctorAppointment(appointmentId, auth),
     onError: (error) => {
       console.error(error);
@@ -113,7 +115,7 @@ export function DoctorAppointmentDetailPage({
     },
   });
 
-  const cancelMutation = useMutation({
+  const cancelMutation = useSessionMutation({
     mutationFn: (values: ReasonForm) =>
       cancelDoctorAppointment(appointmentId, values, auth),
     onError: (error) => {

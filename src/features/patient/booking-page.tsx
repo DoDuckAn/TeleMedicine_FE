@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import {
   ArrowLeft,
   Clock,
@@ -42,7 +43,8 @@ type BookingForm = z.infer<typeof bookingSchema>;
 export function BookingPage({ doctorId }: { doctorId: string }) {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] =
     useState<DoctorAvailabilitySlot | null>(null);
@@ -101,7 +103,7 @@ export function BookingPage({ doctorId }: { doctorId: string }) {
     },
   ];
 
-  const createMutation = useMutation({
+  const createMutation = useSessionMutation({
     mutationFn: (values: BookingForm) => {
       if (!currentSlot) {
         throw new Error("NO_SLOT");

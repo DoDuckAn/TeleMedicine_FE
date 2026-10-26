@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,7 +21,8 @@ import { useAuthStore } from "@/lib/auth/session-store";
 export function DoctorRequestsPage() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [rejectReasons, setRejectReasons] = useState<Record<string, string>>(
     {},
   );
@@ -31,7 +33,7 @@ export function DoctorRequestsPage() {
     queryKey: ["doctor", "appointments", "pending"],
   });
 
-  const confirmMutation = useMutation({
+  const confirmMutation = useSessionMutation({
     mutationFn: (appointmentId: string) =>
       confirmDoctorAppointment(appointmentId, auth),
     onError: (error) => {
@@ -44,7 +46,7 @@ export function DoctorRequestsPage() {
     },
   });
 
-  const rejectMutation = useMutation({
+  const rejectMutation = useSessionMutation({
     mutationFn: ({
       appointmentId,
       reason,

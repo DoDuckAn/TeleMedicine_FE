@@ -1,7 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
+import { isCurrentLogin } from "@/lib/auth/session-ownership";
 import { ArrowLeft, Loader2, Save, Upload } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -48,7 +50,8 @@ export function AdminDoctorNewPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string>();
@@ -87,7 +90,7 @@ export function AdminDoctorNewPage() {
   const selectedSpecialtyIds =
     useWatch({ control: form.control, name: "specialtyIds" }) ?? [];
 
-  const createMutation = useMutation({
+  const createMutation = useSessionMutation({
     mutationFn: (values: DoctorFormOutput) => {
       const normalizedSchedule = normalizeWeeklySchedule(weeklySchedule);
 
@@ -116,6 +119,7 @@ export function AdminDoctorNewPage() {
     onSuccess: async (data) => {
       toast.success("Đã tạo tài khoản bác sĩ.");
       await queryClient.invalidateQueries({ queryKey: ["admin", "doctors"] });
+      if (!isCurrentLogin(loginId)) return;
       router.push(`/admin/doctors/${data.id}`);
     },
   });

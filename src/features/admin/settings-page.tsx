@@ -1,6 +1,8 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/lib/auth/use-session-mutation";
+import { isCurrentLogin } from "@/lib/auth/session-ownership";
 import {
   CheckCircle2,
   Clock3,
@@ -78,7 +80,8 @@ const integrationGroups: Array<{
 export function AdminSettingsPage() {
   const queryClient = useQueryClient();
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [scheduleDraft, setScheduleDraft] = useState<{
     end: string;
     start: string;
@@ -108,7 +111,7 @@ export function AdminSettingsPage() {
     Object.keys(credentialDraft).length > 0 || useEnvironment.size > 0;
   const hasChanges = scheduleChanged || hasCredentialChanges;
 
-  const saveMutation = useMutation({
+  const saveMutation = useSessionMutation({
     mutationFn: (currentPassword: string) => {
       const credentials = Object.fromEntries([
         ...Object.entries(credentialDraft).filter(([, value]) =>
@@ -155,6 +158,7 @@ export function AdminSettingsPage() {
       toast.error("Không lưu được cài đặt.");
     },
     onSuccess: (data) => {
+      if (!isCurrentLogin(loginId)) return;
       queryClient.setQueryData(["admin", "system-settings"], data);
       queryClient.setQueryData(["system", "schedule-settings"], {
         slotDurationMinutes: data.slotDurationMinutes,

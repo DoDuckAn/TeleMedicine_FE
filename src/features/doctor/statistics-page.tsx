@@ -50,7 +50,8 @@ function defaultFilters() {
 
 export function DoctorStatisticsPage() {
   const accessToken = useAuthStore((state) => state.accessToken);
-  const auth = { accessToken: accessToken ?? "" };
+  const loginId = useAuthStore((state) => state.loginId);
+  const auth = { accessToken: accessToken ?? "", loginId };
   const [filters, setFilters] = useState(defaultFilters);
 
   const statisticsQuery = useQuery({

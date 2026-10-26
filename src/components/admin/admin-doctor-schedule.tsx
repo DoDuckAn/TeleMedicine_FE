@@ -20,6 +20,7 @@ export function AdminDoctorSchedule({
   active: boolean;
 }) {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const loginId = useAuthStore((state) => state.loginId);
   const [view, setView] = useState<"overrides" | "available">("overrides");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -40,7 +41,7 @@ export function AdminDoctorSchedule({
               ).toISOString()
             : undefined,
         },
-        { accessToken: accessToken! },
+        { accessToken: accessToken!, loginId },
       ),
   });
   const available = useQuery({
