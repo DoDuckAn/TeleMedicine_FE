@@ -308,6 +308,7 @@ export function DoctorSchedulePage() {
   }
 
   function selectWeek(dateOnly: string) {
+    if (!dateOnly) return;
     setWeekStart(getWeekStartFromDateOnly(dateOnly));
   }
 
@@ -325,26 +326,36 @@ export function DoctorSchedulePage() {
               </h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div
+              aria-label="Chọn tuần làm việc"
+              className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:w-auto sm:grid-cols-[auto_10rem_auto] xl:shrink-0"
+              role="group"
+            >
               <Button
+                aria-label="Tuần trước"
+                className="h-11 w-11 shrink-0 p-0 sm:w-auto sm:px-4"
                 onClick={() => setWeekStart(addDaysToDateOnly(weekStart, -7))}
+                title="Tuần trước"
                 variant="outline"
               >
                 <ArrowLeft aria-hidden="true" className="size-4" />
-                Tuần trước
+                <span className="hidden sm:inline">Tuần trước</span>
               </Button>
               <Input
                 aria-label="Chọn tuần"
-                className="w-40"
                 onDateChange={(dateValue) => selectWeek(dateValue)}
+                required
                 type="date"
                 value={weekStart}
               />
               <Button
+                aria-label="Tuần sau"
+                className="h-11 w-11 shrink-0 p-0 sm:w-auto sm:px-4"
                 onClick={() => setWeekStart(addDaysToDateOnly(weekStart, 7))}
+                title="Tuần sau"
                 variant="outline"
               >
-                Tuần sau
+                <span className="hidden sm:inline">Tuần sau</span>
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Button>
             </div>
