@@ -274,13 +274,13 @@ export function PushNotificationProvider({
     try {
       await disableCurrentPush(ownedSession(owner));
       localCleanupComplete = true;
-      publish(owner, "idle");
       const result = await updateNotificationPreferences(
         { channels: { push: false } },
         ownedSession(owner),
       );
       ownedSession(owner);
       queryClient.setQueryData(["notifications", "preferences", owner], result);
+      publish(owner, "idle");
     } catch {
       const failure = pushDisableFailure(localCleanupComplete);
       publish(owner, failure.status, failure.message);
